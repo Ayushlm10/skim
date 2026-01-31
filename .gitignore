@@ -4,6 +4,9 @@ mdview
 # Specs (internal documentation)
 specs/
 
+# Test files
+test-docs/
+
 # IDE
 .idea/
 .vscode/
