@@ -17,7 +17,7 @@ A terminal-based markdown viewer built with the [Charm](https://charm.sh) Go TUI
 
 ## Screenshot
 
-<!-- Add your screenshot here -->
+![skim-view](image.png)
 
 ## Installation
 
