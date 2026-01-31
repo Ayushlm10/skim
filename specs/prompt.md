@@ -36,6 +36,25 @@ When working on this project:
 - Use the Go TUI skills (bubbletea, lipgloss, bubbles, glamour) for implementation guidance
 - **Create a git commit at the end of each phase** with a descriptive message
 - **Check git history** (`git log --oneline`) to understand what's been done
+- **Update AGENTS.md** when discovering patterns or instructions that would help future AI assistants
+
+### Maintaining AGENTS.md
+
+The `AGENTS.md` file at the repository root contains instructions specifically for AI coding assistants. When you discover something that would help future assistants work on this codebase, add it to AGENTS.md:
+
+**What to add:**
+- Code patterns specific to this project (e.g., how to add a new component)
+- Common pitfalls or gotchas encountered during implementation
+- Project-specific conventions that differ from general best practices
+- Boundaries and constraints (what NOT to do)
+- Useful commands or workflows
+
+**Format:**
+- Keep it concise and scannable
+- Use the existing section structure
+- Add to "Code Patterns" for implementation patterns
+- Add to "Boundaries" for constraints
+- Add to "Workflow" for process instructions
 
 ### Git History
 
