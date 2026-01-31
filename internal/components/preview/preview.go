@@ -203,7 +203,7 @@ func (m Model) HandleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		// Next match
 		if len(m.matches) > 0 {
 			m.currentMatch = (m.currentMatch + 1) % len(m.matches)
-			m.scrollToCurrentMatch()
+			(&m).scrollToCurrentMatch()
 		}
 		return m, nil
 
@@ -214,14 +214,14 @@ func (m Model) HandleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 			if m.currentMatch < 0 {
 				m.currentMatch = len(m.matches) - 1
 			}
-			m.scrollToCurrentMatch()
+			(&m).scrollToCurrentMatch()
 		}
 		return m, nil
 
 	case "esc":
 		// Clear search if active
 		if m.searchQuery != "" {
-			m.clearSearch()
+			(&m).clearSearch()
 		}
 		return m, nil
 	}
@@ -239,10 +239,11 @@ func (m Model) handleSearchKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		m.searchInput.Blur()
 		if query != "" {
 			m.searchQuery = query
-			m.performSearch()
+			// Use pointer to ensure modifications persist
+			(&m).performSearch()
 			if len(m.matches) > 0 {
 				m.currentMatch = 0
-				m.scrollToCurrentMatch()
+				(&m).scrollToCurrentMatch()
 			}
 		}
 		return m, nil
@@ -270,7 +271,7 @@ func (m *Model) performSearch() {
 		return
 	}
 
-	// Case-insensitive search
+	// Case-insensitive search in raw content for line tracking (for scrolling)
 	query := strings.ToLower(m.searchQuery)
 	lines := strings.Split(m.rawContent, "\n")
 
@@ -279,6 +280,173 @@ func (m *Model) performSearch() {
 			m.matches = append(m.matches, i)
 		}
 	}
+
+	// Apply highlighting to rendered content
+	m.applySearchHighlight()
+}
+
+// countVisibleMatches counts occurrences in visible text (for status bar display)
+func (m Model) countVisibleMatches() int {
+	if m.searchQuery == "" || m.renderedContent == "" {
+		return 0
+	}
+
+	// Strip ANSI codes and count matches
+	visible := stripANSI(m.renderedContent)
+	lowerVisible := strings.ToLower(visible)
+	lowerQuery := strings.ToLower(m.searchQuery)
+
+	count := 0
+	searchStart := 0
+	for {
+		idx := strings.Index(lowerVisible[searchStart:], lowerQuery)
+		if idx == -1 {
+			break
+		}
+		count++
+		searchStart = searchStart + idx + 1
+	}
+	return count
+}
+
+// stripANSI removes ANSI escape sequences from a string
+func stripANSI(s string) string {
+	result := &strings.Builder{}
+	result.Grow(len(s))
+
+	i := 0
+	for i < len(s) {
+		if s[i] == '\x1b' && i+1 < len(s) && s[i+1] == '[' {
+			j := i + 2
+			for j < len(s) && s[j] != 'm' {
+				j++
+			}
+			if j < len(s) {
+				j++
+				i = j
+				continue
+			}
+		}
+		result.WriteByte(s[i])
+		i++
+	}
+	return result.String()
+}
+
+// applySearchHighlight highlights search matches in the rendered content
+func (m *Model) applySearchHighlight() {
+	if m.searchQuery == "" || m.renderedContent == "" {
+		m.viewport.SetContent(m.renderedContent)
+		return
+	}
+
+	highlighted := highlightMatches(m.renderedContent, m.searchQuery)
+	// Debug: Log that highlighting is being applied
+	// Remove this after debugging
+	_ = highlighted // Ensure we're using the variable
+	m.viewport.SetContent(highlighted)
+}
+
+// highlightMatches applies reverse video highlighting to all occurrences of query
+// It handles ANSI escape sequences properly by tracking visible text positions
+func highlightMatches(content, query string) string {
+	if query == "" {
+		return content
+	}
+
+	// ANSI codes for reverse video (swap fg/bg)
+	const reverseOn = "\x1b[7m"
+	const reverseOff = "\x1b[27m"
+
+	lowerQuery := strings.ToLower(query)
+	queryLen := len(query)
+
+	// First, find all match positions in the visible text (ignoring ANSI codes)
+	// Build a map of visible position -> original position
+	visibleText := &strings.Builder{}
+	visibleToOriginal := make([]int, 0, len(content))
+
+	i := 0
+	for i < len(content) {
+		// Skip ANSI escape sequences
+		if content[i] == '\x1b' && i+1 < len(content) && content[i+1] == '[' {
+			j := i + 2
+			for j < len(content) && content[j] != 'm' {
+				j++
+			}
+			if j < len(content) {
+				j++ // Include the 'm'
+				i = j
+				continue
+			}
+		}
+
+		// Track this visible character's original position
+		visibleToOriginal = append(visibleToOriginal, i)
+		visibleText.WriteByte(content[i])
+		i++
+	}
+
+	visible := visibleText.String()
+	lowerVisible := strings.ToLower(visible)
+
+	// Find all match start positions in visible text
+	var matchStarts []int
+	searchStart := 0
+	for {
+		idx := strings.Index(lowerVisible[searchStart:], lowerQuery)
+		if idx == -1 {
+			break
+		}
+		matchStarts = append(matchStarts, searchStart+idx)
+		searchStart = searchStart + idx + 1
+	}
+
+	if len(matchStarts) == 0 {
+		return content
+	}
+
+	// Build result with highlights inserted at correct positions
+	result := &strings.Builder{}
+	result.Grow(len(content) + len(matchStarts)*20)
+
+	// Create a set of positions where we need to insert highlight codes
+	highlightOn := make(map[int]bool)  // original positions to insert reverseOn
+	highlightOff := make(map[int]bool) // original positions to insert reverseOff
+
+	for _, visStart := range matchStarts {
+		if visStart < len(visibleToOriginal) {
+			highlightOn[visibleToOriginal[visStart]] = true
+		}
+		visEnd := visStart + queryLen
+		if visEnd <= len(visibleToOriginal) {
+			// Insert reverseOff AFTER the last character of match
+			if visEnd < len(visibleToOriginal) {
+				highlightOff[visibleToOriginal[visEnd]] = true
+			} else {
+				// Match extends to end of visible content
+				highlightOff[len(content)] = true
+			}
+		}
+	}
+
+	// Now rebuild content with highlights
+	for i := 0; i <= len(content); i++ {
+		// Check if we need to turn off highlight here
+		if highlightOff[i] {
+			result.WriteString(reverseOff)
+		}
+		// Check if we need to turn on highlight here
+		if highlightOn[i] {
+			result.WriteString(reverseOn)
+		}
+
+		if i < len(content) {
+			result.WriteByte(content[i])
+		}
+	}
+
+	return result.String()
 }
 
 // scrollToCurrentMatch scrolls the viewport to show the current match
@@ -320,6 +488,11 @@ func (m *Model) clearSearch() {
 	m.matches = nil
 	m.currentMatch = 0
 	m.searchInput.SetValue("")
+
+	// Restore original rendered content (without highlights)
+	if m.renderedContent != "" {
+		m.viewport.SetContent(m.renderedContent)
+	}
 }
 
 // HandleMouse handles mouse input (scrolling)
@@ -461,7 +634,12 @@ func (m *Model) SetSize(width, height int) {
 		rendered, err := m.renderer.Render(m.rawContent)
 		if err == nil {
 			m.renderedContent = rendered
-			m.viewport.SetContent(rendered)
+			// If there's an active search, apply highlighting
+			if m.searchQuery != "" {
+				m.applySearchHighlight()
+			} else {
+				m.viewport.SetContent(rendered)
+			}
 		}
 	}
 }
@@ -524,9 +702,9 @@ func (m Model) SearchQuery() string {
 	return m.searchQuery
 }
 
-// MatchCount returns the number of matches found
+// MatchCount returns the number of matches found (in visible rendered text)
 func (m Model) MatchCount() int {
-	return len(m.matches)
+	return m.countVisibleMatches()
 }
 
 // CurrentMatchIndex returns the current match index (1-based for display)

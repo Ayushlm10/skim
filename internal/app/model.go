@@ -97,8 +97,15 @@ func (m Model) PanelWidths() (fileTree, preview int) {
 	return fileTree, preview
 }
 
-// ContentHeight returns the height available for panel content
+// ContentHeight returns the height available for panel content (inner height for lipgloss)
 func (m Model) ContentHeight() int {
-	// Total height minus header (1) and status bar (1) and borders (4)
+	// Total height minus:
+	// - header (1 line)
+	// - newline after header (1 line)
+	// - panel borders (2 lines: top + bottom, added by lipgloss on top of inner height)
+	// - newline after panels (1 line)
+	// - status bar (1 line)
+	// Total overhead: 6 lines
+	// lipgloss.Height() sets inner height, border adds 2 more
 	return m.Height - 6
 }

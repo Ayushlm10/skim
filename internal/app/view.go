@@ -21,6 +21,7 @@ func (m Model) View() string {
 
 	// Render main content (file tree + preview)
 	b.WriteString(m.renderPanels())
+	b.WriteString("\n")
 
 	// Render status bar
 	b.WriteString(m.renderStatusBar())
@@ -89,9 +90,8 @@ func (m Model) stylePanelBox(content string, width, height int, focused bool) st
 
 // renderFileTree renders the file tree content
 func (m Model) renderFileTree(width, height int) string {
-	// Update file tree size and focus state
-	m.fileTree.SetSize(width, height)
-	m.fileTree.SetFocused(m.FocusedPanel == FileTreePanel)
+	// Note: SetSize is called in Update() on WindowSizeMsg
+	// SetFocused changes are lost here (value receiver) but focus is visual only
 
 	// Render the file tree component
 	content := m.fileTree.View()
@@ -107,9 +107,8 @@ func (m Model) renderFileTree(width, height int) string {
 
 // renderPreview renders the markdown preview content
 func (m Model) renderPreview(width, height int) string {
-	// Update preview size and focus state
-	m.preview.SetSize(width, height)
-	m.preview.SetFocused(m.FocusedPanel == PreviewPanel)
+	// Note: SetSize is called in Update() on WindowSizeMsg
+	// SetFocused changes are lost here (value receiver) but focus is visual only
 
 	// Render the preview component
 	content := m.preview.View()
@@ -211,12 +210,33 @@ func (m Model) renderStatusBar() string {
 	} else if m.loading {
 		// Show loading indicator
 		rightInfo = styles.StatusLoadingStyle.Render("loading...")
+	} else if m.preview.IsSearchMode() {
+		// Show searching indicator (takes priority)
+		searchIndicator := styles.SearchPromptStyle.Render("[searching]")
+		if m.preview.FileName() != "" {
+			rightInfo = styles.StatusValueStyle.Render(m.preview.FileName()) + " " + searchIndicator
+		} else {
+			rightInfo = searchIndicator
+		}
+	} else if m.preview.HasActiveSearch() || m.preview.HasSearchNoMatches() {
+		// Show search results (visible regardless of focused panel)
+		var searchIndicator string
+		if m.preview.HasActiveSearch() {
+			matchInfo := itoa(m.preview.CurrentMatchIndex()) + "/" + itoa(m.preview.MatchCount())
+			searchIndicator = styles.SearchMatchStyle.Render("[" + m.preview.SearchQuery() + ": " + matchInfo + "]")
+		} else {
+			searchIndicator = styles.SearchNoMatchStyle.Render("[" + m.preview.SearchQuery() + ": no matches]")
+		}
+		fileName := styles.StatusValueStyle.Render(m.preview.FileName())
+		scrollPct := int(m.preview.ScrollPercent() * 100)
+		scrollIndicator := styles.HelpDescStyle.Render("[" + itoa(scrollPct) + "%]")
+		rightInfo = fileName + " " + searchIndicator + " " + scrollIndicator
 	} else if m.filterText != "" {
 		// Show active filter
 		rightInfo = styles.FilterPromptStyle.Render("filter: ") +
 			styles.StatusValueStyle.Render(m.filterText)
 	} else if m.FocusedPanel == PreviewPanel && m.preview.FilePath() != "" {
-		// Show file info when preview focused
+		// Show file info when preview focused (no active search)
 		scrollPct := int(m.preview.ScrollPercent() * 100)
 
 		// Build status parts
@@ -229,18 +249,7 @@ func (m Model) renderStatusBar() string {
 			watchIndicator = styles.StatusWatchingStyle.Render(" [watching]")
 		}
 
-		// Add search indicator if search is active
-		searchIndicator := ""
-		if m.preview.IsSearchMode() {
-			searchIndicator = styles.SearchPromptStyle.Render(" [searching]")
-		} else if m.preview.HasActiveSearch() {
-			matchInfo := itoa(m.preview.CurrentMatchIndex()) + "/" + itoa(m.preview.MatchCount())
-			searchIndicator = styles.SearchMatchStyle.Render(" [" + m.preview.SearchQuery() + ": " + matchInfo + "]")
-		} else if m.preview.HasSearchNoMatches() {
-			searchIndicator = styles.SearchNoMatchStyle.Render(" [" + m.preview.SearchQuery() + ": no matches]")
-		}
-
-		rightInfo = fileName + watchIndicator + searchIndicator + " " + scrollIndicator
+		rightInfo = fileName + watchIndicator + " " + scrollIndicator
 	}
 
 	// Calculate spacing and add right info
