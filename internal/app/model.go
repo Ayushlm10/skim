@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/athakur/local-md/internal/components/filetree"
+	"github.com/athakur/local-md/internal/components/preview"
 	"github.com/athakur/local-md/internal/styles"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -21,9 +22,8 @@ type Model struct {
 	// File tree component (Phase 2)
 	fileTree filetree.Model
 
-	// Preview state (placeholder for Phase 3)
-	previewContent string
-	previewPath    string
+	// Preview component (Phase 3)
+	preview preview.Model
 
 	// UI state
 	ready        bool
@@ -36,12 +36,15 @@ func New(rootPath string) Model {
 	// Create file tree with initial dimensions (will be resized)
 	ft := filetree.New(rootPath, 30, 20)
 
+	// Create preview component with initial dimensions
+	pv := preview.New(60, 20)
+
 	return Model{
-		RootPath:       rootPath,
-		FocusedPanel:   FileTreePanel,
-		fileTree:       ft,
-		previewContent: "",
-		ready:          false,
+		RootPath:     rootPath,
+		FocusedPanel: FileTreePanel,
+		fileTree:     ft,
+		preview:      pv,
+		ready:        false,
 	}
 }
 
@@ -50,6 +53,7 @@ func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		tea.SetWindowTitle("Local MD Viewer"),
 		m.fileTree.Init(),
+		m.preview.Init(),
 	)
 }
 

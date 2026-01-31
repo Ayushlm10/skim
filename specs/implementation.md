@@ -1,6 +1,6 @@
 # Local MD Viewer - Implementation Status
 
-## Current Status: Phase 2 Complete
+## Current Status: Phase 3 Complete
 
 Last Updated: 2026-01-31
 
@@ -44,18 +44,18 @@ Last Updated: 2026-01-31
 
 ## Phase 3: Markdown Preview
 
-**Status:** Not Started
+**Status:** Complete
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Glamour integration | Pending | |
-| Preview component | Pending | |
-| File loading | Pending | |
-| Word wrapping | Pending | |
-| Scroll functionality | Pending | |
-| Scroll indicator | Pending | |
+| Glamour integration | Done | `internal/components/preview/renderer.go` - auto style, word wrap |
+| Preview component | Done | `internal/components/preview/preview.go` - viewport-based |
+| File loading | Done | `LoadFile` command with async loading |
+| Word wrapping | Done | Adapts to panel width on resize |
+| Scroll functionality | Done | j/k, PgUp/PgDn, Ctrl+u/d, g/G |
+| Scroll indicator | Done | Shows filename and scroll % in status bar |
 
-**Blockers:** None (Phase 2 complete)
+**Blockers:** None
 
 ---
 
@@ -88,7 +88,7 @@ Last Updated: 2026-01-31
 | Re-render on change | Pending | |
 | Error handling | Pending | |
 
-**Blockers:** Depends on Phase 3
+**Blockers:** None (Phase 3 complete)
 
 ---
 
@@ -129,8 +129,8 @@ Last Updated: 2026-01-31
 | `internal/components/filetree/item.go` | Done | Tree items |
 | `internal/components/filetree/delegate.go` | Done | List delegate |
 | `internal/components/filetree/scanner.go` | Done | Dir scanner |
-| `internal/components/preview/preview.go` | Pending | Preview component |
-| `internal/components/preview/renderer.go` | Pending | Glamour wrapper |
+| `internal/components/preview/preview.go` | Done | Preview component with viewport |
+| `internal/components/preview/renderer.go` | Done | Glamour wrapper with word wrap |
 | `internal/components/statusbar/statusbar.go` | Pending | Status bar component |
 | `internal/watcher/watcher.go` | Pending | File watcher |
 
@@ -157,10 +157,10 @@ None yet.
 
 ## Next Steps
 
-1. Integrate Glamour for markdown rendering
-2. Create preview component with viewport scrolling
-3. Load file content on selection
-4. Wire file tree selection to preview panel
+1. Enable built-in list filtering with `/` key
+2. Implement filter mode activation and exit
+3. Style the filter input
+4. Update status bar for filter state
 
 ---
 
@@ -184,3 +184,10 @@ None yet.
   - Expand/collapse directories with Enter key
   - Lazy loading of children on expand
   - Built on bubbles list component for filtering support
+- **Phase 3 Complete**: Markdown preview with Glamour rendering
+  - Glamour integration with auto style (adapts to light/dark terminals)
+  - Preview component using bubbles viewport for scrolling
+  - Async file loading via `LoadFile` command
+  - Word wrapping that adapts to panel width
+  - Full scroll support: j/k, PgUp/PgDn, Ctrl+u/d, g/G
+  - Status bar shows filename and scroll percentage when focused

@@ -1,7 +1,6 @@
 package app
 
 import (
-	"path/filepath"
 	"strings"
 
 	"github.com/athakur/local-md/internal/styles"
@@ -101,51 +100,56 @@ func (m Model) renderFileTree(width, height int) string {
 
 // renderPreview renders the markdown preview content
 func (m Model) renderPreview(width, height int) string {
-	if m.previewPath == "" {
-		// Show placeholder for Phase 1
-		placeholder := []string{
-			"# Welcome to Local MD Viewer",
-			"",
-			"Select a markdown file from the left panel to preview it here.",
-			"",
-			"## Quick Start",
-			"",
-			"- Use **j/k** or **arrow keys** to navigate",
-			"- Press **Enter** to open a file",
-			"- Press **Tab** to switch panels",
-			"- Press **/** to filter files",
-			"- Press **q** to quit",
-			"",
-			"---",
-			"",
-			"_Phase 1 placeholder content_",
-		}
+	// Update preview size and focus state
+	m.preview.SetSize(width, height)
+	m.preview.SetFocused(m.FocusedPanel == PreviewPanel)
 
-		content := strings.Join(placeholder, "\n")
-		return styles.PreviewStyle.Width(width).Render(content)
+	// Render the preview component
+	content := m.preview.View()
+
+	// Ensure content fills the available height
+	lines := strings.Split(content, "\n")
+	for len(lines) < height {
+		lines = append(lines, "")
 	}
 
-	// Render actual content (to be enhanced in Phase 3 with Glamour)
-	content := m.previewContent
-	if content == "" {
-		content = styles.NoPreviewStyle.Render("Loading " + filepath.Base(m.previewPath) + "...")
+	// Truncate if too long
+	if len(lines) > height {
+		lines = lines[:height]
 	}
 
-	return styles.PreviewStyle.Width(width).Render(content)
+	return strings.Join(lines, "\n")
 }
 
 // renderStatusBar renders the bottom status bar
 func (m Model) renderStatusBar() string {
-	// Build help hints
-	hints := []struct {
+	// Build help hints based on focused panel
+	var hints []struct {
 		key  string
 		desc string
-	}{
-		{"↑↓", "navigate"},
-		{"⏎", "open"},
-		{"/", "filter"},
-		{"Tab", "switch"},
-		{"q", "quit"},
+	}
+
+	if m.FocusedPanel == FileTreePanel {
+		hints = []struct {
+			key  string
+			desc string
+		}{
+			{"↑↓", "navigate"},
+			{"⏎", "open"},
+			{"/", "filter"},
+			{"Tab", "switch"},
+			{"q", "quit"},
+		}
+	} else {
+		hints = []struct {
+			key  string
+			desc string
+		}{
+			{"↑↓", "scroll"},
+			{"g/G", "top/bottom"},
+			{"Tab", "switch"},
+			{"q", "quit"},
+		}
 	}
 
 	var parts []string
@@ -157,7 +161,40 @@ func (m Model) renderStatusBar() string {
 	separator := styles.HelpSeparatorStyle.Render("  │  ")
 	statusContent := strings.Join(parts, separator)
 
+	// Add scroll indicator if in preview and file is loaded
+	if m.FocusedPanel == PreviewPanel && m.preview.FilePath() != "" {
+		scrollPct := int(m.preview.ScrollPercent() * 100)
+		scrollInfo := styles.StatusValueStyle.Render(
+			m.preview.FileName() + " " + styles.HelpDescStyle.Render(
+				"["+itoa(scrollPct)+"%]",
+			),
+		)
+		// Calculate spacing
+		statusWidth := lipgloss.Width(statusContent)
+		scrollWidth := lipgloss.Width(scrollInfo)
+		spacerWidth := m.Width - statusWidth - scrollWidth - 4
+		if spacerWidth > 0 {
+			statusContent = statusContent + strings.Repeat(" ", spacerWidth) + scrollInfo
+		}
+	}
+
 	return styles.StatusBarStyle.
 		Width(m.Width).
 		Render(statusContent)
+}
+
+// itoa converts int to string without importing strconv
+func itoa(i int) string {
+	if i == 0 {
+		return "0"
+	}
+	if i < 0 {
+		return "-" + itoa(-i)
+	}
+	var digits []byte
+	for i > 0 {
+		digits = append([]byte{byte('0' + i%10)}, digits...)
+		i /= 10
+	}
+	return string(digits)
 }

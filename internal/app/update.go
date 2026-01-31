@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/athakur/local-md/internal/components/filetree"
+	"github.com/athakur/local-md/internal/components/preview"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -17,10 +18,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Height = msg.Height
 		m.ready = true
 
-		// Update file tree size
-		fileTreeWidth, _ := m.PanelWidths()
+		// Update component sizes
+		fileTreeWidth, previewWidth := m.PanelWidths()
 		contentHeight := m.ContentHeight()
 		m.fileTree.SetSize(fileTreeWidth-2, contentHeight)
+		m.preview.SetSize(previewWidth-2, contentHeight)
 
 		return m, nil
 
@@ -34,17 +36,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Custom messages
 	case FileSelectedMsg:
-		m.previewPath = msg.Path
-		return m, nil
-
-	case FileLoadedMsg:
-		m.previewContent = msg.Content
-		m.previewPath = msg.Path
-		return m, nil
-
-	case FileErrorMsg:
-		m.previewContent = "Error loading file: " + msg.Err.Error()
-		return m, nil
+		// Load the file content
+		return m, preview.LoadFile(msg.Path)
 
 	case FocusChangedMsg:
 		m.FocusedPanel = msg.Panel
@@ -59,13 +52,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// File tree component messages
 	case filetree.FileSelectedMsg:
-		m.previewPath = msg.Path
-		// TODO: Load file content in Phase 3
-		return m, nil
+		// Load the file content when a file is selected in the tree
+		return m, preview.LoadFile(msg.Path)
 
 	case filetree.DirectoryToggledMsg:
 		// Directory was toggled, tree already updated
 		return m, nil
+
+	// Preview component messages
+	case preview.FileLoadedMsg:
+		// Forward to preview component
+		var cmd tea.Cmd
+		m.preview, cmd = m.preview.Update(msg)
+		return m, cmd
 	}
 
 	// Forward messages to file tree when focused
@@ -122,31 +121,8 @@ func (m Model) handleFileTreeKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 // handlePreviewKeys handles keys when preview is focused
 func (m Model) handlePreviewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.String() {
-	case "up", "k":
-		// Scroll up (to be implemented in Phase 3)
-		return m, nil
-
-	case "down", "j":
-		// Scroll down (to be implemented in Phase 3)
-		return m, nil
-
-	case "pgup", "ctrl+u":
-		// Page up (to be implemented in Phase 3)
-		return m, nil
-
-	case "pgdown", "ctrl+d":
-		// Page down (to be implemented in Phase 3)
-		return m, nil
-
-	case "g":
-		// Go to top (to be implemented in Phase 3)
-		return m, nil
-
-	case "G":
-		// Go to bottom (to be implemented in Phase 3)
-		return m, nil
-	}
-
-	return m, nil
+	// Delegate to preview component
+	var cmd tea.Cmd
+	m.preview, cmd = m.preview.HandleKey(msg)
+	return m, cmd
 }

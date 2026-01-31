@@ -225,6 +225,19 @@ Phase 2: File Tree Component - Directory scanning with expand/collapse
 - Built on bubbles list for filtering support
 ```
 
+### Phase 3 Commit (2026-01-31)
+
+```
+Phase 3: Markdown Preview - Glamour rendering with viewport scrolling
+
+- Add preview component package (renderer, preview)
+- Integrate Glamour with auto style for light/dark terminal adaptation
+- Implement viewport-based scrolling (j/k, PgUp/PgDn, g/G, Ctrl+u/d)
+- Wire file selection to preview via LoadFile command
+- Adaptive word wrapping based on panel width
+- Status bar shows filename and scroll percentage when preview focused
+```
+
 ---
 
 ## Future Prompts
