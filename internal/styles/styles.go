@@ -4,12 +4,19 @@ import "github.com/charmbracelet/lipgloss"
 
 // Minimal/Editorial color palette - muted and sophisticated
 var (
-	// Base colors - adaptive to terminal
-	Subtle    = lipgloss.AdaptiveColor{Light: "#9B9B9B", Dark: "#5C5C5C"}
-	Highlight = lipgloss.AdaptiveColor{Light: "#2D2D2D", Dark: "#E0E0E0"}
-	Accent    = lipgloss.AdaptiveColor{Light: "#4A7C59", Dark: "#7EB38E"}
-	Muted     = lipgloss.AdaptiveColor{Light: "#666666", Dark: "#888888"}
-	Border    = lipgloss.AdaptiveColor{Light: "#DDDDDD", Dark: "#3A3A3A"}
+	// Base colors - adaptive to terminal with improved contrast
+	Subtle    = lipgloss.AdaptiveColor{Light: "#9B9B9B", Dark: "#626262"}
+	Highlight = lipgloss.AdaptiveColor{Light: "#1A1A1A", Dark: "#F0F0F0"}
+	Accent    = lipgloss.AdaptiveColor{Light: "#2D6A4F", Dark: "#95D5B2"}
+	Muted     = lipgloss.AdaptiveColor{Light: "#6B6B6B", Dark: "#9A9A9A"}
+	Border    = lipgloss.AdaptiveColor{Light: "#E0E0E0", Dark: "#404040"}
+
+	// Secondary colors for visual hierarchy
+	AccentDim  = lipgloss.AdaptiveColor{Light: "#40916C", Dark: "#74C69D"}
+	Warning    = lipgloss.AdaptiveColor{Light: "#B07D2B", Dark: "#F4A261"}
+	Error      = lipgloss.AdaptiveColor{Light: "#C94C4C", Dark: "#FF6B6B"}
+	Success    = lipgloss.AdaptiveColor{Light: "#2D6A4F", Dark: "#52B788"}
+	Background = lipgloss.AdaptiveColor{Light: "#FAFAFA", Dark: "#1A1A1A"}
 
 	// Panel widths (ratios)
 	FileTreeRatio = 0.25
@@ -74,7 +81,7 @@ var (
 var (
 	StatusBarStyle = lipgloss.NewStyle().
 			Foreground(Muted).
-			Background(lipgloss.AdaptiveColor{Light: "#F5F5F5", Dark: "#1A1A1A"}).
+			Background(lipgloss.AdaptiveColor{Light: "#F0F0F0", Dark: "#252525"}).
 			Padding(0, 1)
 
 	StatusKeyStyle = lipgloss.NewStyle().
@@ -82,6 +89,18 @@ var (
 
 	StatusValueStyle = lipgloss.NewStyle().
 				Foreground(Highlight)
+
+	StatusWatchingStyle = lipgloss.NewStyle().
+				Foreground(Success).
+				Bold(true)
+
+	StatusLoadingStyle = lipgloss.NewStyle().
+				Foreground(AccentDim).
+				Italic(true)
+
+	StatusErrorStyle = lipgloss.NewStyle().
+				Foreground(Error).
+				Bold(true)
 )
 
 // Filter input styles
@@ -116,9 +135,20 @@ var (
 // Empty state styles
 var (
 	EmptyStateStyle = lipgloss.NewStyle().
-		Foreground(Muted).
-		Italic(true).
-		Align(lipgloss.Center)
+			Foreground(Muted).
+			Italic(true).
+			Align(lipgloss.Center)
+
+	EmptyStateTitleStyle = lipgloss.NewStyle().
+				Foreground(Subtle).
+				Bold(true).
+				Align(lipgloss.Center).
+				MarginBottom(1)
+
+	EmptyStateHintStyle = lipgloss.NewStyle().
+				Foreground(Muted).
+				Italic(true).
+				Align(lipgloss.Center)
 )
 
 // Tree indicators

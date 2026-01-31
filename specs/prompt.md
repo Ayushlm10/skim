@@ -264,6 +264,19 @@ Phase 5: File Watching - Live reload with fsnotify debouncing
 - Clean watcher shutdown on quit
 ```
 
+### Phase 6 Commit (2026-01-31)
+
+```
+Phase 6: Polish & Styling - Help overlay, improved UX states
+
+- Add help overlay component (? key) with keyboard shortcuts
+- Refine color palette with improved contrast and semantic colors
+- Add loading indicator in status bar during file loads
+- Display errors in status bar (truncated) and preview (detailed)
+- Improve empty states for file tree and preview welcome
+- Add help hint to status bar
+```
+
 ---
 
 ## Future Prompts

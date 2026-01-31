@@ -1,7 +1,6 @@
 package preview
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -178,18 +177,24 @@ func (m Model) View() string {
 func (m Model) renderWelcome() string {
 	welcome := []string{
 		"",
-		"  # Welcome to Local MD Viewer",
+		"# Welcome to Local MD Viewer",
 		"",
-		"  Select a markdown file from the left panel",
-		"  to preview it here.",
+		"Select a markdown file from the left panel to preview it here.",
 		"",
-		"  ## Quick Start",
+		"## Quick Start",
 		"",
-		"  - Use **j/k** or **arrow keys** to navigate",
-		"  - Press **Enter** to open a file",
-		"  - Press **Tab** to switch panels",
-		"  - Press **/** to filter files",
-		"  - Press **q** to quit",
+		"| Key | Action |",
+		"|-----|--------|",
+		"| `↑` `↓` / `j` `k` | Navigate files |",
+		"| `Enter` | Open file or toggle folder |",
+		"| `Tab` | Switch between panels |",
+		"| `/` | Filter files |",
+		"| `?` | Show keyboard shortcuts |",
+		"| `q` | Quit |",
+		"",
+		"---",
+		"",
+		"*Files are automatically reloaded when modified.*",
 		"",
 	}
 
@@ -207,11 +212,28 @@ func (m Model) renderWelcome() string {
 
 // renderError renders an error message
 func (m Model) renderError(err error) string {
-	errorStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FF6B6B")).
-		Padding(1, 2)
+	titleStyle := lipgloss.NewStyle().
+		Foreground(styles.Error).
+		Bold(true).
+		MarginBottom(1)
 
-	return errorStyle.Render(fmt.Sprintf("Error loading file:\n\n%s", err.Error()))
+	messageStyle := lipgloss.NewStyle().
+		Foreground(styles.Muted)
+
+	hintStyle := lipgloss.NewStyle().
+		Foreground(styles.Subtle).
+		Italic(true).
+		MarginTop(1)
+
+	title := titleStyle.Render("Unable to Load File")
+	message := messageStyle.Render(err.Error())
+	hint := hintStyle.Render("Select another file or check the file path.")
+
+	content := title + "\n\n" + message + "\n\n" + hint
+
+	return lipgloss.NewStyle().
+		Padding(2, 3).
+		Render(content)
 }
 
 // SetSize updates the component size

@@ -25,7 +25,14 @@ func (m Model) View() string {
 	// Render status bar
 	b.WriteString(m.renderStatusBar())
 
-	return b.String()
+	baseView := b.String()
+
+	// Overlay help if visible
+	if m.help.IsVisible() {
+		return m.overlayHelp(baseView)
+	}
+
+	return baseView
 }
 
 // renderHeader renders the top header bar
@@ -143,6 +150,7 @@ func (m Model) renderStatusBar() string {
 			{"⏎", "open"},
 			{"/", "filter"},
 			{"Tab", "switch"},
+			{"?", "help"},
 			{"q", "quit"},
 		}
 	} else {
@@ -153,6 +161,7 @@ func (m Model) renderStatusBar() string {
 			{"↑↓", "scroll"},
 			{"g/G", "top/bottom"},
 			{"Tab", "switch"},
+			{"?", "help"},
 			{"q", "quit"},
 		}
 	}
@@ -166,36 +175,48 @@ func (m Model) renderStatusBar() string {
 	separator := styles.HelpSeparatorStyle.Render("  │  ")
 	statusContent := strings.Join(parts, separator)
 
-	// Add filter indicator if there's an active filter
-	if m.filterText != "" {
-		filterInfo := styles.FilterPromptStyle.Render("filter: ") +
-			styles.StatusValueStyle.Render(m.filterText)
-		// Calculate spacing
-		statusWidth := lipgloss.Width(statusContent)
-		filterWidth := lipgloss.Width(filterInfo)
-		spacerWidth := m.Width - statusWidth - filterWidth - 4
-		if spacerWidth > 0 {
-			statusContent = statusContent + strings.Repeat(" ", spacerWidth) + filterInfo
+	// Build right-side status info
+	var rightInfo string
+
+	// Show error if any
+	if m.lastError != "" {
+		// Truncate long errors
+		errMsg := m.lastError
+		if len(errMsg) > 30 {
+			errMsg = errMsg[:27] + "..."
 		}
+		rightInfo = styles.StatusErrorStyle.Render("error: " + errMsg)
+	} else if m.loading {
+		// Show loading indicator
+		rightInfo = styles.StatusLoadingStyle.Render("loading...")
+	} else if m.filterText != "" {
+		// Show active filter
+		rightInfo = styles.FilterPromptStyle.Render("filter: ") +
+			styles.StatusValueStyle.Render(m.filterText)
 	} else if m.FocusedPanel == PreviewPanel && m.preview.FilePath() != "" {
-		// Add scroll indicator if in preview and file is loaded
+		// Show file info when preview focused
 		scrollPct := int(m.preview.ScrollPercent() * 100)
+
+		// Build status parts
+		fileName := styles.StatusValueStyle.Render(m.preview.FileName())
+		scrollIndicator := styles.HelpDescStyle.Render("[" + itoa(scrollPct) + "%]")
+
 		// Add watch indicator if file is being watched
 		watchIndicator := ""
 		if m.watchedFile != "" && m.watchedFile == m.preview.FilePath() {
-			watchIndicator = " [watching]"
+			watchIndicator = styles.StatusWatchingStyle.Render(" [watching]")
 		}
-		scrollInfo := styles.StatusValueStyle.Render(
-			m.preview.FileName() + watchIndicator + " " + styles.HelpDescStyle.Render(
-				"["+itoa(scrollPct)+"%]",
-			),
-		)
-		// Calculate spacing
+
+		rightInfo = fileName + watchIndicator + " " + scrollIndicator
+	}
+
+	// Calculate spacing and add right info
+	if rightInfo != "" {
 		statusWidth := lipgloss.Width(statusContent)
-		scrollWidth := lipgloss.Width(scrollInfo)
-		spacerWidth := m.Width - statusWidth - scrollWidth - 4
+		rightWidth := lipgloss.Width(rightInfo)
+		spacerWidth := m.Width - statusWidth - rightWidth - 4
 		if spacerWidth > 0 {
-			statusContent = statusContent + strings.Repeat(" ", spacerWidth) + scrollInfo
+			statusContent = statusContent + strings.Repeat(" ", spacerWidth) + rightInfo
 		}
 	}
 
@@ -251,4 +272,33 @@ func itoa(i int) string {
 		i /= 10
 	}
 	return string(digits)
+}
+
+// overlayHelp renders the help overlay on top of the base view
+func (m Model) overlayHelp(baseView string) string {
+	// Set help size based on current window
+	m.help.SetSize(m.Width, m.Height)
+
+	// Get help overlay content
+	helpView := m.help.View()
+
+	// Split base view into lines
+	baseLines := strings.Split(baseView, "\n")
+
+	// Split help view into lines
+	helpLines := strings.Split(helpView, "\n")
+
+	// Overlay help on top of base
+	result := make([]string, len(baseLines))
+	copy(result, baseLines)
+
+	for i, helpLine := range helpLines {
+		if i < len(result) && helpLine != "" {
+			// Replace base line with help line where help has content
+			// This creates a simple overlay effect
+			result[i] = helpLine
+		}
+	}
+
+	return strings.Join(result, "\n")
 }

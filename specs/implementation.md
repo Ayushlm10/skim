@@ -1,6 +1,6 @@
 # Local MD Viewer - Implementation Status
 
-## Current Status: Phase 5 Complete
+## Current Status: Phase 6 Complete
 
 Last Updated: 2026-01-31
 
@@ -94,19 +94,19 @@ Last Updated: 2026-01-31
 
 ## Phase 6: Polish & Styling
 
-**Status:** Not Started
+**Status:** Complete
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Color palette refinement | Pending | |
-| Focus indicators | Pending | Done (basic) - accent border on focused panel |
-| Status bar info | Pending | Done (basic) - shows key hints |
-| Help overlay | Pending | |
-| Empty states | Pending | Done (basic) - placeholder messages |
-| Loading indicators | Pending | |
-| Error messages | Pending | |
+| Help overlay | Done | `internal/components/help/help.go` - ? key toggles overlay |
+| Color palette refinement | Done | Improved contrast, added semantic colors (error, success, warning) |
+| Focus indicators | Done | Accent border on focused panel |
+| Status bar info | Done | Shows key hints, loading state, errors, watch status |
+| Empty states | Done | Improved messaging for no files and preview welcome |
+| Loading indicators | Done | Status bar shows "loading..." during file load |
+| Error messages | Done | Status bar shows truncated errors, preview shows detailed errors |
 
-**Blockers:** None (Phase 5 complete)
+**Blockers:** None
 
 ---
 
@@ -132,6 +132,7 @@ Last Updated: 2026-01-31
 | `internal/components/preview/preview.go` | Done | Preview component with viewport |
 | `internal/components/preview/renderer.go` | Done | Glamour wrapper with word wrap |
 | `internal/components/statusbar/statusbar.go` | Pending | Status bar component |
+| `internal/components/help/help.go` | Done | Help overlay component |
 | `internal/watcher/watcher.go` | Done | File watcher with fsnotify |
 | `internal/watcher/commands.go` | Done | Bubble Tea commands for watcher |
 
@@ -158,10 +159,11 @@ None yet.
 
 ## Next Steps
 
-1. Implement help overlay (? key)
-2. Refine color palette
-3. Improve focus indicators
-4. Add loading/error states
+All core phases complete. Potential future enhancements:
+1. Custom themes / theme switching
+2. Bookmarks / favorites
+3. Search within file content
+4. External editor integration (open in $EDITOR)
 
 ---
 
@@ -206,3 +208,10 @@ None yet.
   - Re-renders preview on file change
   - Status bar shows [watching] indicator
   - Clean shutdown on quit
+- **Phase 6 Complete**: Polish & Styling
+  - Help overlay component (? key) with all keyboard shortcuts
+  - Improved color palette with better contrast and semantic colors
+  - Loading indicator in status bar during file loads
+  - Error display in status bar (truncated) and preview (detailed)
+  - Improved empty states for no files and welcome screen
+  - Added help hint to status bar

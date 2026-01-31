@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/athakur/local-md/internal/components/filetree"
+	"github.com/athakur/local-md/internal/components/help"
 	"github.com/athakur/local-md/internal/components/preview"
 	"github.com/athakur/local-md/internal/styles"
 	"github.com/athakur/local-md/internal/watcher"
@@ -26,6 +27,9 @@ type Model struct {
 	// Preview component (Phase 3)
 	preview preview.Model
 
+	// Help overlay (Phase 6)
+	help help.Model
+
 	// File watcher (Phase 5)
 	watcher     *watcher.Watcher
 	watchedFile string
@@ -34,6 +38,8 @@ type Model struct {
 	ready        bool
 	filterActive bool
 	filterText   string
+	loading      bool
+	lastError    string
 }
 
 // New creates a new application model
@@ -44,6 +50,9 @@ func New(rootPath string) Model {
 	// Create preview component with initial dimensions
 	pv := preview.New(60, 20)
 
+	// Create help overlay
+	h := help.New()
+
 	// Create file watcher
 	w, _ := watcher.New()
 
@@ -52,6 +61,7 @@ func New(rootPath string) Model {
 		FocusedPanel: FileTreePanel,
 		fileTree:     ft,
 		preview:      pv,
+		help:         h,
 		watcher:      w,
 		ready:        false,
 	}

@@ -38,6 +38,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Custom messages
 	case FileSelectedMsg:
 		// Load the file content
+		m.loading = true
+		m.lastError = ""
 		return m, preview.LoadFile(msg.Path)
 
 	case FocusChangedMsg:
@@ -58,6 +60,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// File tree component messages
 	case filetree.FileSelectedMsg:
 		// Load the file content when a file is selected in the tree
+		m.loading = true
+		m.lastError = ""
 		return m, preview.LoadFile(msg.Path)
 
 	case filetree.DirectoryToggledMsg:
@@ -69,9 +73,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Forward to preview component
 		var cmd tea.Cmd
 		m.preview, cmd = m.preview.Update(msg)
+		m.loading = false
+
+		// Handle errors
+		if msg.Error != nil {
+			m.lastError = msg.Error.Error()
+			return m, cmd
+		}
 
 		// Start watching the newly loaded file
-		if msg.Error == nil && m.watcher != nil {
+		m.lastError = ""
+		if m.watcher != nil {
 			m.watchedFile = msg.Path
 			return m, tea.Batch(cmd, watcher.StartWatching(m.watcher, msg.Path))
 		}
@@ -114,6 +126,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // handleKeypress processes keyboard input
 func (m Model) handleKeypress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// If help is visible, handle help keys first
+	if m.help.IsVisible() {
+		switch msg.String() {
+		case "?", "esc", "enter", "q":
+			m.help.Hide()
+			return m, nil
+		}
+		// Ignore other keys when help is visible
+		return m, nil
+	}
+
 	// Global keys (work regardless of focus/mode)
 	switch msg.String() {
 	case "ctrl+c", "q":
@@ -124,7 +147,8 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case "?":
-		// Toggle help (to be implemented in Phase 6)
+		// Toggle help overlay
+		m.help.Toggle()
 		return m, nil
 
 	case "tab":

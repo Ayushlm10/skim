@@ -265,10 +265,25 @@ func (m *Model) rebuildList() {
 // View renders the component
 func (m Model) View() string {
 	if len(m.items) == 0 {
-		return styles.EmptyStateStyle.Render("No markdown files found")
+		return m.renderEmptyState()
 	}
 
 	return m.list.View()
+}
+
+// renderEmptyState renders a helpful message when no files are found
+func (m Model) renderEmptyState() string {
+	title := styles.EmptyStateTitleStyle.Render("No Markdown Files")
+	hint := styles.EmptyStateHintStyle.Render("This directory contains no .md files.\nTry navigating to a different directory.")
+
+	// Center the content
+	content := title + "\n\n" + hint
+
+	return lipgloss.NewStyle().
+		Width(m.width).
+		Height(m.height).
+		Align(lipgloss.Center, lipgloss.Center).
+		Render(content)
 }
 
 // SetSize updates the component size
