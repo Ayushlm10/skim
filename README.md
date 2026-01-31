@@ -2,7 +2,7 @@
 
 A terminal-based markdown viewer built with the [Charm](https://charm.sh) Go TUI stack.
 
-![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)
+![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## Features
@@ -14,6 +14,10 @@ A terminal-based markdown viewer built with the [Charm](https://charm.sh) Go TUI
 - **Live reload** - Automatic re-render when files change on disk
 - **Keyboard-driven** - Vim-style navigation with full mouse support
 - **Minimal aesthetic** - Clean, editorial design with muted colors
+
+## Screenshot
+
+<!-- Add your screenshot here -->
 
 ## Installation
 
@@ -42,42 +46,7 @@ skim ~/docs
 skim ./specs
 ```
 
-## Keyboard Shortcuts
-
-### Navigation
-
-| Key | Action |
-|-----|--------|
-| `j` / `k` / `↑` / `↓` | Move up/down |
-| `Enter` | Open file / Toggle directory |
-| `Tab` | Switch between panels |
-
-### File Tree
-
-| Key | Action |
-|-----|--------|
-| `/` | Filter files (fuzzy search) |
-| `Esc` | Clear filter |
-
-### Preview
-
-| Key | Action |
-|-----|--------|
-| `j` / `k` | Scroll line by line |
-| `PgUp` / `Ctrl+u` | Scroll half page up |
-| `PgDn` / `Ctrl+d` | Scroll half page down |
-| `g` | Go to top |
-| `G` | Go to bottom |
-| `/` | Search in content |
-| `n` / `N` | Next/previous match |
-| `Esc` | Clear search |
-
-### General
-
-| Key | Action |
-|-----|--------|
-| `?` | Toggle help overlay |
-| `q` / `Ctrl+c` | Quit |
+Press `?` to see all keyboard shortcuts.
 
 ## Tech Stack
 
