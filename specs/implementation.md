@@ -1,6 +1,6 @@
 # Local MD Viewer - Implementation Status
 
-## Current Status: Phase 1 Complete
+## Current Status: Phase 2 Complete
 
 Last Updated: 2026-01-31
 
@@ -27,18 +27,18 @@ Last Updated: 2026-01-31
 
 ## Phase 2: File Tree Component
 
-**Status:** Not Started
+**Status:** Complete
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Directory scanner | Pending | |
-| Tree item struct | Pending | |
-| Custom list delegate | Pending | |
-| Expand/collapse logic | Pending | |
-| Selection tracking | Pending | |
-| Keyboard navigation | Pending | |
+| Directory scanner | Done | `internal/components/filetree/scanner.go` - scans for .md files |
+| Tree item struct | Done | `internal/components/filetree/item.go` - with depth tracking |
+| Custom list delegate | Done | `internal/components/filetree/delegate.go` - custom rendering |
+| Expand/collapse logic | Done | Toggle directories with Enter key |
+| Selection tracking | Done | Via bubbles list component |
+| Keyboard navigation | Done | j/k, arrows, Enter to toggle/select |
 
-**Blockers:** None (Phase 1 complete)
+**Blockers:** None
 
 ---
 
@@ -55,7 +55,7 @@ Last Updated: 2026-01-31
 | Scroll functionality | Pending | |
 | Scroll indicator | Pending | |
 
-**Blockers:** Depends on Phase 2
+**Blockers:** None (Phase 2 complete)
 
 ---
 
@@ -71,7 +71,7 @@ Last Updated: 2026-01-31
 | Filter input styling | Pending | |
 | Status bar updates | Pending | |
 
-**Blockers:** Depends on Phase 2
+**Blockers:** None (Phase 2 complete)
 
 ---
 
@@ -125,10 +125,10 @@ Last Updated: 2026-01-31
 | `internal/app/view.go` | Done | View rendering for all panels |
 | `internal/app/messages.go` | Done | Message types for app communication |
 | `internal/styles/styles.go` | Done | Centralized Lip Gloss styles |
-| `internal/components/filetree/filetree.go` | Pending | File tree component |
-| `internal/components/filetree/item.go` | Pending | Tree items |
-| `internal/components/filetree/delegate.go` | Pending | List delegate |
-| `internal/components/filetree/scanner.go` | Pending | Dir scanner |
+| `internal/components/filetree/filetree.go` | Done | File tree component |
+| `internal/components/filetree/item.go` | Done | Tree items |
+| `internal/components/filetree/delegate.go` | Done | List delegate |
+| `internal/components/filetree/scanner.go` | Done | Dir scanner |
 | `internal/components/preview/preview.go` | Pending | Preview component |
 | `internal/components/preview/renderer.go` | Pending | Glamour wrapper |
 | `internal/components/statusbar/statusbar.go` | Pending | Status bar component |
@@ -157,10 +157,10 @@ None yet.
 
 ## Next Steps
 
-1. Implement directory scanner for `.md` files
-2. Create tree item struct with depth tracking
-3. Build proper file tree component with expand/collapse
-4. Connect file selection to preview panel
+1. Integrate Glamour for markdown rendering
+2. Create preview component with viewport scrolling
+3. Load file content on selection
+4. Wire file tree selection to preview panel
 
 ---
 
@@ -177,3 +177,10 @@ None yet.
   - Minimal/editorial styling with Lip Gloss
   - Keyboard handling for navigation, Tab switching, quit
   - Status bar with key hints
+- **Phase 2 Complete**: File tree component with expand/collapse
+  - Directory scanner that filters for .md files only
+  - Tree item struct with depth tracking and parent references
+  - Custom list delegate for tree-style rendering
+  - Expand/collapse directories with Enter key
+  - Lazy loading of children on expand
+  - Built on bubbles list component for filtering support

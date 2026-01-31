@@ -212,6 +212,19 @@ Phase 1: Foundation - Basic dual-panel TUI with Charm stack
 - Placeholder content for file tree and preview
 ```
 
+### Phase 2 Commit (2026-01-31)
+
+```
+Phase 2: File Tree Component - Directory scanning with expand/collapse
+
+- Add filetree component package (scanner, item, delegate, filetree)
+- Implement directory scanner for .md files with depth tracking
+- Custom list delegate for tree-style rendering with ▸/▾ indicators
+- Expand/collapse directories via Enter key with lazy child loading
+- Wire component into main app model with message passing
+- Built on bubbles list for filtering support
+```
+
 ---
 
 ## Future Prompts

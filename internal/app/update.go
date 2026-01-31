@@ -1,11 +1,14 @@
 package app
 
 import (
+	"github.com/athakur/local-md/internal/components/filetree"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 // Update handles messages and updates the model
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
 
 	// Window resize
@@ -13,6 +16,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Width = msg.Width
 		m.Height = msg.Height
 		m.ready = true
+
+		// Update file tree size
+		fileTreeWidth, _ := m.PanelWidths()
+		contentHeight := m.ContentHeight()
+		m.fileTree.SetSize(fileTreeWidth-2, contentHeight)
+
 		return m, nil
 
 	// Keyboard input
@@ -47,9 +56,28 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.filterText = ""
 		}
 		return m, nil
+
+	// File tree component messages
+	case filetree.FileSelectedMsg:
+		m.previewPath = msg.Path
+		// TODO: Load file content in Phase 3
+		return m, nil
+
+	case filetree.DirectoryToggledMsg:
+		// Directory was toggled, tree already updated
+		return m, nil
 	}
 
-	return m, nil
+	// Forward messages to file tree when focused
+	if m.FocusedPanel == FileTreePanel {
+		var cmd tea.Cmd
+		m.fileTree, cmd = m.fileTree.Update(msg)
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	}
+
+	return m, tea.Batch(cmds...)
 }
 
 // handleKeypress processes keyboard input
@@ -86,61 +114,10 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 // handleFileTreeKeys handles keys when file tree is focused
 func (m Model) handleFileTreeKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	// If filter mode is active, handle filter input
-	if m.filterActive {
-		switch msg.String() {
-		case "esc":
-			m.filterActive = false
-			m.filterText = ""
-			return m, nil
-		case "enter":
-			m.filterActive = false
-			return m, nil
-		case "backspace":
-			if len(m.filterText) > 0 {
-				m.filterText = m.filterText[:len(m.filterText)-1]
-			}
-			return m, nil
-		default:
-			// Add character to filter (if printable)
-			if len(msg.String()) == 1 {
-				m.filterText += msg.String()
-			}
-			return m, nil
-		}
-	}
-
-	// Normal file tree navigation
-	switch msg.String() {
-	case "up", "k":
-		if m.selectedIndex > 0 {
-			m.selectedIndex--
-		}
-		return m, nil
-
-	case "down", "j":
-		if m.selectedIndex < len(m.fileTreeItems)-1 {
-			m.selectedIndex++
-		}
-		return m, nil
-
-	case "enter":
-		// Open file / toggle directory (to be implemented in Phase 2)
-		return m, nil
-
-	case "/":
-		// Enter filter mode
-		m.filterActive = true
-		m.filterText = ""
-		return m, nil
-
-	case "esc":
-		// Clear selection / reset
-		m.selectedIndex = 0
-		return m, nil
-	}
-
-	return m, nil
+	// Delegate to file tree component
+	var cmd tea.Cmd
+	m.fileTree, cmd = m.fileTree.Update(msg)
+	return m, cmd
 }
 
 // handlePreviewKeys handles keys when preview is focused

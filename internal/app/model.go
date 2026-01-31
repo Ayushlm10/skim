@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/athakur/local-md/internal/components/filetree"
 	"github.com/athakur/local-md/internal/styles"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -17,9 +18,8 @@ type Model struct {
 	// Panel focus
 	FocusedPanel Panel
 
-	// File tree state (placeholder for Phase 2)
-	fileTreeItems []string
-	selectedIndex int
+	// File tree component (Phase 2)
+	fileTree filetree.Model
 
 	// Preview state (placeholder for Phase 3)
 	previewContent string
@@ -33,10 +33,13 @@ type Model struct {
 
 // New creates a new application model
 func New(rootPath string) Model {
+	// Create file tree with initial dimensions (will be resized)
+	ft := filetree.New(rootPath, 30, 20)
+
 	return Model{
 		RootPath:       rootPath,
 		FocusedPanel:   FileTreePanel,
-		fileTreeItems:  []string{}, // Will be populated in Phase 2
+		fileTree:       ft,
 		previewContent: "",
 		ready:          false,
 	}
@@ -44,7 +47,10 @@ func New(rootPath string) Model {
 
 // Init initializes the model and returns an initial command
 func (m Model) Init() tea.Cmd {
-	return tea.SetWindowTitle("Local MD Viewer")
+	return tea.Batch(
+		tea.SetWindowTitle("Local MD Viewer"),
+		m.fileTree.Init(),
+	)
 }
 
 // PanelWidths calculates the width of each panel based on total width

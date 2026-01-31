@@ -83,82 +83,20 @@ func (m Model) stylePanelBox(content string, width, height int, focused bool) st
 
 // renderFileTree renders the file tree content
 func (m Model) renderFileTree(width, height int) string {
-	var b strings.Builder
+	// Update file tree size and focus state
+	m.fileTree.SetSize(width, height)
+	m.fileTree.SetFocused(m.FocusedPanel == FileTreePanel)
 
-	// Show filter input if active
-	if m.filterActive {
-		filterLine := styles.FilterPromptStyle.Render("Filter: ") +
-			styles.FilterInputStyle.Render(m.filterText+"_")
-		b.WriteString(filterLine)
-		b.WriteString("\n\n")
-	}
-
-	// Placeholder content for Phase 1
-	if len(m.fileTreeItems) == 0 {
-		// Show a sample tree structure as placeholder
-		placeholderItems := []struct {
-			name     string
-			isDir    bool
-			depth    int
-			expanded bool
-			selected bool
-		}{
-			{"docs/", true, 0, true, false},
-			{"design.md", false, 1, false, true},
-			{"plan.md", false, 1, false, false},
-			{"implementation.md", false, 1, false, false},
-			{"notes/", true, 0, false, false},
-		}
-
-		for i, item := range placeholderItems {
-			line := m.renderTreeItem(item.name, item.isDir, item.depth, item.expanded, i == 1)
-			b.WriteString(line)
-			b.WriteString("\n")
-		}
-
-		b.WriteString("\n")
-		b.WriteString(styles.EmptyStateStyle.Render("(Phase 1 placeholder)"))
-	}
+	// Render the file tree component
+	content := m.fileTree.View()
 
 	// Ensure content fills the available height
-	content := b.String()
 	lines := strings.Split(content, "\n")
 	for len(lines) < height {
 		lines = append(lines, "")
 	}
 
 	return strings.Join(lines[:height], "\n")
-}
-
-// renderTreeItem renders a single item in the file tree
-func (m Model) renderTreeItem(name string, isDir bool, depth int, expanded, selected bool) string {
-	var b strings.Builder
-
-	// Add indentation
-	indent := strings.Repeat("  ", depth)
-	b.WriteString(indent)
-
-	// Add tree indicator for directories
-	if isDir {
-		indicator := styles.TreeCollapsed
-		if expanded {
-			indicator = styles.TreeExpanded
-		}
-		b.WriteString(styles.TreeIndicatorStyle.Render(indicator + " "))
-		b.WriteString(styles.DirectoryStyle.Render(name))
-	} else {
-		b.WriteString("  ") // Align with directory indicators
-		style := styles.FileStyle
-		if selected {
-			style = styles.SelectedItemStyle
-		}
-		b.WriteString(style.Render(name))
-		if selected {
-			b.WriteString(" " + styles.TreeIndicatorStyle.Render(styles.SelectedMark))
-		}
-	}
-
-	return b.String()
 }
 
 // renderPreview renders the markdown preview content
