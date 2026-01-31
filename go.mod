@@ -1,4 +1,4 @@
-module github.com/athakur/local-md
+module github.com/Ayushlm10/skim
 
 go 1.25.2
 

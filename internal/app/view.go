@@ -3,7 +3,7 @@ package app
 import (
 	"strings"
 
-	"github.com/athakur/local-md/internal/styles"
+	"github.com/Ayushlm10/skim/internal/styles"
 	"github.com/charmbracelet/lipgloss"
 )
 

@@ -1,7 +1,7 @@
 package filetree
 
 import (
-	"github.com/athakur/local-md/internal/styles"
+	"github.com/Ayushlm10/skim/internal/styles"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"

@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/athakur/local-md/internal/components/filetree"
-	"github.com/athakur/local-md/internal/components/preview"
-	"github.com/athakur/local-md/internal/watcher"
+	"github.com/Ayushlm10/skim/internal/components/filetree"
+	"github.com/Ayushlm10/skim/internal/components/preview"
+	"github.com/Ayushlm10/skim/internal/watcher"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

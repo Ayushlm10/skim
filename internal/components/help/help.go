@@ -3,7 +3,7 @@ package help
 import (
 	"strings"
 
-	"github.com/athakur/local-md/internal/styles"
+	"github.com/Ayushlm10/skim/internal/styles"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )

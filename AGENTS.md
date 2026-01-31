@@ -1,6 +1,6 @@
 A terminal-based markdown viewer built with the Charm Go TUI stack for browsing local markdown files.
 **Tech Stack:** Go 1.25.2, Bubble Tea, Lip Gloss
-**Binary:** `mdview`
+**Binary:** `skim`
  Directory Structure
 internal/app/         - Main application model, update, view logic
 internal/styles/      - Centralized Lip Gloss styles
@@ -10,7 +10,7 @@ test-docs/            - Test markdown files for development
 ## Commands
 ```bash
 go run main.go [path]  # Run viewer with optional directory path (defaults to .)
-go build -o mdview     # Build binary
+go build -o skim       # Build binary
 go mod tidy            # Update dependencies
 Code Patterns
 Bubble Tea Architecture: Model-Update-View pattern in internal/app/

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/athakur/local-md/internal/app"
+	"github.com/Ayushlm10/skim/internal/app"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
