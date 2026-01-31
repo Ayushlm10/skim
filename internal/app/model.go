@@ -4,6 +4,7 @@ import (
 	"github.com/athakur/local-md/internal/components/filetree"
 	"github.com/athakur/local-md/internal/components/preview"
 	"github.com/athakur/local-md/internal/styles"
+	"github.com/athakur/local-md/internal/watcher"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -25,6 +26,10 @@ type Model struct {
 	// Preview component (Phase 3)
 	preview preview.Model
 
+	// File watcher (Phase 5)
+	watcher     *watcher.Watcher
+	watchedFile string
+
 	// UI state
 	ready        bool
 	filterActive bool
@@ -39,11 +44,15 @@ func New(rootPath string) Model {
 	// Create preview component with initial dimensions
 	pv := preview.New(60, 20)
 
+	// Create file watcher
+	w, _ := watcher.New()
+
 	return Model{
 		RootPath:     rootPath,
 		FocusedPanel: FileTreePanel,
 		fileTree:     ft,
 		preview:      pv,
+		watcher:      w,
 		ready:        false,
 	}
 }

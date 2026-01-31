@@ -1,6 +1,6 @@
 # Local MD Viewer - Implementation Status
 
-## Current Status: Phase 4 Complete
+## Current Status: Phase 5 Complete
 
 Last Updated: 2026-01-31
 
@@ -77,18 +77,18 @@ Last Updated: 2026-01-31
 
 ## Phase 5: File Watching
 
-**Status:** Not Started
+**Status:** Complete
 
 | Task | Status | Notes |
 |------|--------|-------|
-| fsnotify wrapper | Pending | |
-| FileChangedMsg | Pending | |
-| Watch current file | Pending | |
-| Debounce logic | Pending | |
-| Re-render on change | Pending | |
-| Error handling | Pending | |
+| fsnotify wrapper | Done | `internal/watcher/watcher.go` - wraps fsnotify with channels |
+| FileChangedMsg | Done | `internal/watcher/commands.go` - message types and commands |
+| Watch current file | Done | Auto-watches on file selection |
+| Debounce logic | Done | 100ms debounce to handle rapid saves |
+| Re-render on change | Done | Reloads file and re-renders preview on change |
+| Error handling | Done | WatchErrorMsg continues watching on errors |
 
-**Blockers:** None (Phase 4 complete)
+**Blockers:** None
 
 ---
 
@@ -106,7 +106,7 @@ Last Updated: 2026-01-31
 | Loading indicators | Pending | |
 | Error messages | Pending | |
 
-**Blockers:** Depends on all previous phases
+**Blockers:** None (Phase 5 complete)
 
 ---
 
@@ -132,7 +132,8 @@ Last Updated: 2026-01-31
 | `internal/components/preview/preview.go` | Done | Preview component with viewport |
 | `internal/components/preview/renderer.go` | Done | Glamour wrapper with word wrap |
 | `internal/components/statusbar/statusbar.go` | Pending | Status bar component |
-| `internal/watcher/watcher.go` | Pending | File watcher |
+| `internal/watcher/watcher.go` | Done | File watcher with fsnotify |
+| `internal/watcher/commands.go` | Done | Bubble Tea commands for watcher |
 
 ---
 
@@ -157,10 +158,10 @@ None yet.
 
 ## Next Steps
 
-1. Implement fsnotify watcher wrapper
-2. Create watch command that returns FileChangedMsg
-3. Watch currently selected file
-4. Re-render preview on change
+1. Implement help overlay (? key)
+2. Refine color palette
+3. Improve focus indicators
+4. Add loading/error states
 
 ---
 
@@ -198,3 +199,10 @@ None yet.
   - `Enter` accepts filter and selects item
   - Status bar shows filtering state and active filter text
   - Minimal/editorial styling for filter prompt
+- **Phase 5 Complete**: File watching with live reload
+  - fsnotify wrapper with channel-based events
+  - 100ms debounce for rapid file saves
+  - Auto-watch on file selection
+  - Re-renders preview on file change
+  - Status bar shows [watching] indicator
+  - Clean shutdown on quit

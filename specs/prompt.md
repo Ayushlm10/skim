@@ -251,6 +251,19 @@ Phase 4: Filter/Search - Fuzzy file filtering with styled input
 - Support Enter to accept filter and select item
 ```
 
+### Phase 5 Commit (2026-01-31)
+
+```
+Phase 5: File Watching - Live reload with fsnotify debouncing
+
+- Add watcher package with fsnotify wrapper and debounced events
+- Implement WaitForChange command for Bubble Tea integration
+- Auto-watch files on selection, re-render on change
+- 100ms debounce handles rapid saves without flicker
+- Status bar shows [watching] indicator when file is monitored
+- Clean watcher shutdown on quit
+```
+
 ---
 
 ## Future Prompts

@@ -180,8 +180,13 @@ func (m Model) renderStatusBar() string {
 	} else if m.FocusedPanel == PreviewPanel && m.preview.FilePath() != "" {
 		// Add scroll indicator if in preview and file is loaded
 		scrollPct := int(m.preview.ScrollPercent() * 100)
+		// Add watch indicator if file is being watched
+		watchIndicator := ""
+		if m.watchedFile != "" && m.watchedFile == m.preview.FilePath() {
+			watchIndicator = " [watching]"
+		}
 		scrollInfo := styles.StatusValueStyle.Render(
-			m.preview.FileName() + " " + styles.HelpDescStyle.Render(
+			m.preview.FileName() + watchIndicator + " " + styles.HelpDescStyle.Render(
 				"["+itoa(scrollPct)+"%]",
 			),
 		)

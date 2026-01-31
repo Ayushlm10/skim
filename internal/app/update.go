@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/athakur/local-md/internal/components/filetree"
 	"github.com/athakur/local-md/internal/components/preview"
+	"github.com/athakur/local-md/internal/watcher"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -68,7 +69,35 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Forward to preview component
 		var cmd tea.Cmd
 		m.preview, cmd = m.preview.Update(msg)
+
+		// Start watching the newly loaded file
+		if msg.Error == nil && m.watcher != nil {
+			m.watchedFile = msg.Path
+			return m, tea.Batch(cmd, watcher.StartWatching(m.watcher, msg.Path))
+		}
 		return m, cmd
+
+	// Watcher messages (Phase 5)
+	case watcher.FileChangedMsg:
+		// File changed, reload it
+		if msg.Path == m.watchedFile {
+			return m, tea.Batch(
+				preview.LoadFile(msg.Path),
+				watcher.WaitForChange(m.watcher),
+			)
+		}
+		return m, watcher.WaitForChange(m.watcher)
+
+	case watcher.WatchErrorMsg:
+		// Log error but continue watching
+		// TODO: Show error in status bar in Phase 6
+		return m, watcher.WaitForChange(m.watcher)
+	}
+
+	// Handle internal watch started message
+	if path, ok := watcher.IsWatchStartedMsg(msg); ok {
+		m.watchedFile = path
+		return m, watcher.WaitForChange(m.watcher)
 	}
 
 	// Forward messages to file tree when focused
@@ -88,6 +117,10 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// Global keys (work regardless of focus/mode)
 	switch msg.String() {
 	case "ctrl+c", "q":
+		// Clean up watcher before quitting
+		if m.watcher != nil {
+			_ = m.watcher.Close()
+		}
 		return m, tea.Quit
 
 	case "?":
