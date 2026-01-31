@@ -1,0 +1,47 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Sidebar from '../../components/Sidebar.astro';
+import MarkdownContent from '../../components/MarkdownContent.astro';
+import { getFileTree, getFileByPath } from '../../lib/files';
+
+const { path } = Astro.params;
+const tree = await getFileTree();
+
+// Decode the path for lookup
+const decodedPath = decodeURIComponent(path as string);
+const file = await getFileByPath(decodedPath);
+
+if (!file) {
+  return Astro.redirect('/');
+}
+---
+
+<Layout title={file.title}>
+  <div class="app">
+    <Sidebar tree={tree} currentPath={file.relativePath} />
+    
+    <main class="main-content">
+      <MarkdownContent file={file} />
+    </main>
+  </div>
+</Layout>
+
+<style>
+  .app {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    background: var(--bg-deep);
+    min-height: 100vh;
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      margin-left: 0;
+    }
+  }
+</style>
