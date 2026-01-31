@@ -5,6 +5,8 @@ A terminal-based markdown viewer built with the [Charm](https://charm.sh) Go TUI
 ![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
+Now that I've been working with a lot of markdown files to help my coding agents from forgetting the important stuff, I needed an easier way to navigate them without leaving my terminal, so here is skim.
+
 ## Features
 
 - **Dual-panel layout** - File tree (25%) and markdown preview (75%)
