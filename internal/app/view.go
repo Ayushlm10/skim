@@ -38,7 +38,7 @@ func (m Model) View() string {
 
 // renderHeader renders the top header bar
 func (m Model) renderHeader() string {
-	title := styles.HeaderStyle.Render("Local MD Viewer")
+	title := styles.HeaderStyle.Render("skim")
 
 	// Show the current path (truncated if needed)
 	path := m.RootPath

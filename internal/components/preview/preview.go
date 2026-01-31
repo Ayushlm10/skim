@@ -555,7 +555,7 @@ func (m Model) renderSearchInput() string {
 func (m Model) renderWelcome() string {
 	welcome := []string{
 		"",
-		"# Welcome to Local MD Viewer",
+		"# Welcome to skim",
 		"",
 		"Select a markdown file from the left panel to preview it here.",
 		"",

@@ -70,7 +70,7 @@ func New(rootPath string) Model {
 // Init initializes the model and returns an initial command
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(
-		tea.SetWindowTitle("Local MD Viewer"),
+		tea.SetWindowTitle("skim"),
 		m.fileTree.Init(),
 		m.preview.Init(),
 	)

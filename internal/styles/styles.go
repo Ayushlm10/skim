@@ -55,6 +55,11 @@ var (
 				Foreground(Highlight).
 				Background(lipgloss.AdaptiveColor{Light: "#EEEEEE", Dark: "#333333"})
 
+	SelectedDirectoryStyle = lipgloss.NewStyle().
+				Foreground(Accent).
+				Bold(true).
+				Background(lipgloss.AdaptiveColor{Light: "#EEEEEE", Dark: "#333333"})
+
 	DirectoryStyle = lipgloss.NewStyle().
 			Foreground(Accent).
 			Bold(true)

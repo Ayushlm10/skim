@@ -51,6 +51,8 @@ func (d ItemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 	indent := strings.Repeat("  ", item.Depth)
 	b.WriteString(indent)
 
+	isSelected := index == m.Index()
+
 	// Render based on item type
 	if item.IsDir {
 		// Directory with expand/collapse indicator
@@ -59,12 +61,19 @@ func (d ItemDelegate) Render(w io.Writer, m list.Model, index int, listItem list
 			indicator = styles.TreeExpanded
 		}
 		b.WriteString(styles.TreeIndicatorStyle.Render(indicator + " "))
-		b.WriteString(styles.DirectoryStyle.Render(item.DisplayName()))
+
+		if isSelected {
+			b.WriteString(styles.SelectedDirectoryStyle.Render(item.DisplayName()))
+			if d.ShowIndicator {
+				b.WriteString(" " + styles.TreeIndicatorStyle.Render(styles.SelectedMark))
+			}
+		} else {
+			b.WriteString(styles.DirectoryStyle.Render(item.DisplayName()))
+		}
 	} else {
 		// File with proper alignment
 		b.WriteString("  ") // Align with directory indicators
 
-		isSelected := index == m.Index()
 		if isSelected {
 			b.WriteString(styles.SelectedItemStyle.Render(item.Name))
 			if d.ShowIndicator {
