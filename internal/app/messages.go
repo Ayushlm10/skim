@@ -53,6 +53,7 @@ type FocusChangedMsg struct {
 // FilterActiveMsg is sent when filter mode is toggled
 type FilterActiveMsg struct {
 	Active bool
+	Value  string
 }
 
 // WindowSizeMsg wraps the terminal size for components

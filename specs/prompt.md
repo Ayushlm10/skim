@@ -238,6 +238,19 @@ Phase 3: Markdown Preview - Glamour rendering with viewport scrolling
 - Status bar shows filename and scroll percentage when preview focused
 ```
 
+### Phase 4 Commit (2026-01-31)
+
+```
+Phase 4: Filter/Search - Fuzzy file filtering with styled input
+
+- Enable bubbles list built-in filtering functionality
+- Add / key to enter filter mode, Esc to exit and clear
+- Style filter input with minimal/editorial aesthetic
+- Add FilterChangedMsg for state communication between components
+- Update status bar to show filter state and active filter text
+- Support Enter to accept filter and select item
+```
+
 ---
 
 ## Future Prompts

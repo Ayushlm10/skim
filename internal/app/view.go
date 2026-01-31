@@ -123,6 +123,11 @@ func (m Model) renderPreview(width, height int) string {
 
 // renderStatusBar renders the bottom status bar
 func (m Model) renderStatusBar() string {
+	// Check if we're in filter mode
+	if m.filterActive {
+		return m.renderFilterStatusBar()
+	}
+
 	// Build help hints based on focused panel
 	var hints []struct {
 		key  string
@@ -161,8 +166,19 @@ func (m Model) renderStatusBar() string {
 	separator := styles.HelpSeparatorStyle.Render("  │  ")
 	statusContent := strings.Join(parts, separator)
 
-	// Add scroll indicator if in preview and file is loaded
-	if m.FocusedPanel == PreviewPanel && m.preview.FilePath() != "" {
+	// Add filter indicator if there's an active filter
+	if m.filterText != "" {
+		filterInfo := styles.FilterPromptStyle.Render("filter: ") +
+			styles.StatusValueStyle.Render(m.filterText)
+		// Calculate spacing
+		statusWidth := lipgloss.Width(statusContent)
+		filterWidth := lipgloss.Width(filterInfo)
+		spacerWidth := m.Width - statusWidth - filterWidth - 4
+		if spacerWidth > 0 {
+			statusContent = statusContent + strings.Repeat(" ", spacerWidth) + filterInfo
+		}
+	} else if m.FocusedPanel == PreviewPanel && m.preview.FilePath() != "" {
+		// Add scroll indicator if in preview and file is loaded
 		scrollPct := int(m.preview.ScrollPercent() * 100)
 		scrollInfo := styles.StatusValueStyle.Render(
 			m.preview.FileName() + " " + styles.HelpDescStyle.Render(
@@ -176,6 +192,39 @@ func (m Model) renderStatusBar() string {
 		if spacerWidth > 0 {
 			statusContent = statusContent + strings.Repeat(" ", spacerWidth) + scrollInfo
 		}
+	}
+
+	return styles.StatusBarStyle.
+		Width(m.Width).
+		Render(statusContent)
+}
+
+// renderFilterStatusBar renders the status bar during filter mode
+func (m Model) renderFilterStatusBar() string {
+	hints := []struct {
+		key  string
+		desc string
+	}{
+		{"⏎", "accept"},
+		{"Esc", "cancel"},
+	}
+
+	var parts []string
+	for _, h := range hints {
+		part := styles.HelpKeyStyle.Render(h.key) + " " + styles.HelpDescStyle.Render(h.desc)
+		parts = append(parts, part)
+	}
+
+	separator := styles.HelpSeparatorStyle.Render("  │  ")
+	statusContent := strings.Join(parts, separator)
+
+	// Add filtering indicator
+	filterIndicator := styles.FilterPromptStyle.Render("FILTERING")
+	statusWidth := lipgloss.Width(statusContent)
+	filterWidth := lipgloss.Width(filterIndicator)
+	spacerWidth := m.Width - statusWidth - filterWidth - 4
+	if spacerWidth > 0 {
+		statusContent = statusContent + strings.Repeat(" ", spacerWidth) + filterIndicator
 	}
 
 	return styles.StatusBarStyle.

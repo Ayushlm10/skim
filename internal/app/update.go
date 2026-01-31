@@ -45,9 +45,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case FilterActiveMsg:
 		m.filterActive = msg.Active
-		if !msg.Active {
-			m.filterText = ""
-		}
+		m.filterText = msg.Value
+		return m, nil
+
+	// File tree filter state change
+	case filetree.FilterChangedMsg:
+		m.filterActive = msg.Active
+		m.filterText = msg.Value
 		return m, nil
 
 	// File tree component messages

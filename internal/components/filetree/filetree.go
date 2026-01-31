@@ -20,6 +20,12 @@ type DirectoryToggledMsg struct {
 	Expanded bool
 }
 
+// FilterChangedMsg is sent when the filter state changes
+type FilterChangedMsg struct {
+	Active bool
+	Value  string
+}
+
 // Model is the file tree component model
 type Model struct {
 	// Root path being scanned
@@ -53,7 +59,7 @@ func New(rootPath string, width, height int) Model {
 	l.SetShowStatusBar(false)
 	l.SetShowHelp(false)
 	l.SetFilteringEnabled(true)
-	l.SetShowFilter(false)
+	l.SetShowFilter(true) // Show filter input when filtering
 	l.Styles.NoItems = styles.EmptyStateStyle
 	l.DisableQuitKeybindings()
 
@@ -136,6 +142,37 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 // handleKey handles keyboard input
 func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
+	// When filtering, delegate most keys to the list
+	if m.IsFiltering() {
+		switch msg.String() {
+		case "esc":
+			// Exit filter mode and clear filter
+			m.list.ResetFilter()
+			return m, func() tea.Msg {
+				return FilterChangedMsg{Active: false, Value: ""}
+			}
+		case "enter":
+			// Accept filter and select item
+			if m.list.FilterState() == list.Filtering {
+				// Let list handle the enter to accept filter
+				var cmd tea.Cmd
+				m.list, cmd = m.list.Update(msg)
+				return m, tea.Batch(cmd, func() tea.Msg {
+					return FilterChangedMsg{Active: false, Value: m.list.FilterValue()}
+				})
+			}
+			return m.handleSelect()
+		default:
+			// Forward to list for filter input
+			var cmd tea.Cmd
+			m.list, cmd = m.list.Update(msg)
+			// Notify parent of filter changes
+			return m, tea.Batch(cmd, func() tea.Msg {
+				return FilterChangedMsg{Active: true, Value: m.list.FilterValue()}
+			})
+		}
+	}
+
 	switch msg.String() {
 	case "enter":
 		return m.handleSelect()
@@ -149,10 +186,22 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 		return m, nil
 
 	case "/":
-		// Delegate to list's filtering
+		// Enter filter mode - delegate to list's filtering
 		var cmd tea.Cmd
 		m.list, cmd = m.list.Update(msg)
-		return m, cmd
+		return m, tea.Batch(cmd, func() tea.Msg {
+			return FilterChangedMsg{Active: true, Value: ""}
+		})
+
+	case "esc":
+		// Clear filter if there is one
+		if m.list.FilterValue() != "" {
+			m.list.ResetFilter()
+			return m, func() tea.Msg {
+				return FilterChangedMsg{Active: false, Value: ""}
+			}
+		}
+		return m, nil
 	}
 
 	return m, nil
@@ -259,6 +308,21 @@ func (m Model) FilterState() (string, bool) {
 	return m.list.FilterValue(), m.list.FilterState() == list.Filtering
 }
 
+// IsFiltering returns true if the list is in filtering mode
+func (m Model) IsFiltering() bool {
+	return m.list.FilterState() == list.Filtering
+}
+
+// FilterValue returns the current filter value
+func (m Model) FilterValue() string {
+	return m.list.FilterValue()
+}
+
+// HasActiveFilter returns true if there's a non-empty filter applied
+func (m Model) HasActiveFilter() bool {
+	return m.list.FilterValue() != ""
+}
+
 // treeListStyles returns custom styles for the tree list
 func treeListStyles() list.Styles {
 	s := list.DefaultStyles()
@@ -267,12 +331,16 @@ func treeListStyles() list.Styles {
 		Foreground(styles.Highlight).
 		Bold(true)
 
+	// Filter input styling - minimal/editorial aesthetic
 	s.FilterPrompt = styles.FilterPromptStyle
-	s.FilterCursor = lipgloss.NewStyle().Foreground(styles.Accent)
+	s.FilterCursor = styles.FilterCursorStyle
 
 	// Pagination and help styling
 	s.PaginationStyle = lipgloss.NewStyle().Foreground(styles.Muted)
 	s.HelpStyle = lipgloss.NewStyle().Foreground(styles.Muted)
+
+	// No items message
+	s.NoItems = styles.EmptyStateStyle
 
 	return s
 }

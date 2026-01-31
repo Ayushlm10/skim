@@ -1,6 +1,6 @@
 # Local MD Viewer - Implementation Status
 
-## Current Status: Phase 3 Complete
+## Current Status: Phase 4 Complete
 
 Last Updated: 2026-01-31
 
@@ -61,17 +61,17 @@ Last Updated: 2026-01-31
 
 ## Phase 4: Filter/Search
 
-**Status:** Not Started
+**Status:** Complete
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Enable list filtering | Pending | |
-| Filter mode activation | Pending | |
-| Filter mode exit | Pending | |
-| Filter input styling | Pending | |
-| Status bar updates | Pending | |
+| Enable list filtering | Done | Using bubbles list built-in filtering |
+| Filter mode activation | Done | `/` key enters filter mode |
+| Filter mode exit | Done | `Esc` exits and clears, `Enter` accepts |
+| Filter input styling | Done | Minimal/editorial styling with accent colors |
+| Status bar updates | Done | Shows filter state and active filter text |
 
-**Blockers:** None (Phase 2 complete)
+**Blockers:** None
 
 ---
 
@@ -88,7 +88,7 @@ Last Updated: 2026-01-31
 | Re-render on change | Pending | |
 | Error handling | Pending | |
 
-**Blockers:** None (Phase 3 complete)
+**Blockers:** None (Phase 4 complete)
 
 ---
 
@@ -157,10 +157,10 @@ None yet.
 
 ## Next Steps
 
-1. Enable built-in list filtering with `/` key
-2. Implement filter mode activation and exit
-3. Style the filter input
-4. Update status bar for filter state
+1. Implement fsnotify watcher wrapper
+2. Create watch command that returns FileChangedMsg
+3. Watch currently selected file
+4. Re-render preview on change
 
 ---
 
@@ -191,3 +191,10 @@ None yet.
   - Word wrapping that adapts to panel width
   - Full scroll support: j/k, PgUp/PgDn, Ctrl+u/d, g/G
   - Status bar shows filename and scroll percentage when focused
+- **Phase 4 Complete**: Filter/Search functionality
+  - Enabled bubbles list built-in filtering
+  - `/` key enters filter mode with styled input
+  - `Esc` exits filter mode and clears filter
+  - `Enter` accepts filter and selects item
+  - Status bar shows filtering state and active filter text
+  - Minimal/editorial styling for filter prompt

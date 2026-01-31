@@ -87,10 +87,18 @@ var (
 // Filter input styles
 var (
 	FilterPromptStyle = lipgloss.NewStyle().
-				Foreground(Accent)
+				Foreground(Accent).
+				Bold(true)
 
 	FilterInputStyle = lipgloss.NewStyle().
 				Foreground(Highlight)
+
+	FilterCursorStyle = lipgloss.NewStyle().
+				Foreground(Accent)
+
+	FilterTextStyle = lipgloss.NewStyle().
+			Foreground(Highlight).
+			Background(lipgloss.AdaptiveColor{Light: "#F0F0F0", Dark: "#2A2A2A"})
 )
 
 // Help styles
