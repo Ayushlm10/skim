@@ -277,6 +277,21 @@ Phase 6: Polish & Styling - Help overlay, improved UX states
 - Add help hint to status bar
 ```
 
+### Phase 7 Commit (2026-01-31)
+
+```
+Phase 7: Mouse Scrolling & In-Preview Search - Enhanced UX
+
+- Route mouse wheel events to hovered panel (file tree or preview)
+- Add search mode to preview component (/ key when preview focused)
+- Implement case-insensitive content search in raw markdown
+- Add n/N navigation between search matches with wrap-around
+- Show search state in status bar ([query: X/Y] or [query: no matches])
+- Render search input at bottom of preview panel
+- Update help overlay with search keybindings
+- Clear search when loading new file
+```
+
 ---
 
 ## Future Prompts

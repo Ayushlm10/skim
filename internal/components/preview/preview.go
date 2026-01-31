@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/athakur/local-md/internal/styles"
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -49,6 +50,13 @@ type Model struct {
 
 	// Error state
 	err error
+
+	// Search state (Phase 7.2)
+	searchMode   bool            // Whether search input is active
+	searchInput  textinput.Model // Text input for search query
+	searchQuery  string          // Current search query (after Enter)
+	matches      []int           // Line numbers in rawContent that match
+	currentMatch int             // Index into matches slice (0-based)
 }
 
 // New creates a new preview component
@@ -65,13 +73,27 @@ func New(width, height int) Model {
 	// Create renderer (with padding for viewport)
 	renderer, _ := NewRenderer(width - 4)
 
+	// Create search input
+	ti := textinput.New()
+	ti.Placeholder = "search..."
+	ti.Prompt = "/"
+	ti.PromptStyle = styles.FilterPromptStyle
+	ti.TextStyle = styles.FilterInputStyle
+	ti.Cursor.Style = styles.FilterCursorStyle
+	ti.CharLimit = 100
+	ti.Width = width - 10
+
 	return Model{
-		viewport: vp,
-		renderer: renderer,
-		width:    width,
-		height:   height,
-		focused:  false,
-		ready:    true,
+		viewport:     vp,
+		renderer:     renderer,
+		width:        width,
+		height:       height,
+		focused:      false,
+		ready:        true,
+		searchInput:  ti,
+		searchMode:   false,
+		matches:      nil,
+		currentMatch: 0,
 	}
 }
 
@@ -90,6 +112,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		return m, nil
 
 	case FileLoadedMsg:
+		// Clear any existing search when loading a new file
+		m.clearSearch()
+		m.searchMode = false
+		m.searchInput.Blur()
+
 		if msg.Error != nil {
 			m.err = msg.Error
 			m.renderedContent = ""
@@ -127,6 +154,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 // HandleKey handles keyboard input when focused
 func (m Model) HandleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
+	// Handle search mode input
+	if m.searchMode {
+		return m.handleSearchKey(msg)
+	}
+
 	switch msg.String() {
 	case "up", "k":
 		m.viewport.LineUp(1)
@@ -159,9 +191,135 @@ func (m Model) HandleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 	case "end":
 		m.viewport.GotoBottom()
 		return m, nil
+
+	case "/":
+		// Enter search mode
+		m.searchMode = true
+		m.searchInput.Focus()
+		m.searchInput.SetValue("")
+		return m, textinput.Blink
+
+	case "n":
+		// Next match
+		if len(m.matches) > 0 {
+			m.currentMatch = (m.currentMatch + 1) % len(m.matches)
+			m.scrollToCurrentMatch()
+		}
+		return m, nil
+
+	case "N":
+		// Previous match
+		if len(m.matches) > 0 {
+			m.currentMatch--
+			if m.currentMatch < 0 {
+				m.currentMatch = len(m.matches) - 1
+			}
+			m.scrollToCurrentMatch()
+		}
+		return m, nil
+
+	case "esc":
+		// Clear search if active
+		if m.searchQuery != "" {
+			m.clearSearch()
+		}
+		return m, nil
 	}
 
 	return m, nil
+}
+
+// handleSearchKey handles keys when search input is active
+func (m Model) handleSearchKey(msg tea.KeyMsg) (Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		// Execute search and exit search mode
+		query := m.searchInput.Value()
+		m.searchMode = false
+		m.searchInput.Blur()
+		if query != "" {
+			m.searchQuery = query
+			m.performSearch()
+			if len(m.matches) > 0 {
+				m.currentMatch = 0
+				m.scrollToCurrentMatch()
+			}
+		}
+		return m, nil
+
+	case "esc":
+		// Cancel search mode without searching
+		m.searchMode = false
+		m.searchInput.Blur()
+		m.searchInput.SetValue("")
+		return m, nil
+	}
+
+	// Forward other keys to textinput
+	var cmd tea.Cmd
+	m.searchInput, cmd = m.searchInput.Update(msg)
+	return m, cmd
+}
+
+// performSearch searches rawContent for the query and stores matching line numbers
+func (m *Model) performSearch() {
+	m.matches = nil
+	m.currentMatch = 0
+
+	if m.searchQuery == "" || m.rawContent == "" {
+		return
+	}
+
+	// Case-insensitive search
+	query := strings.ToLower(m.searchQuery)
+	lines := strings.Split(m.rawContent, "\n")
+
+	for i, line := range lines {
+		if strings.Contains(strings.ToLower(line), query) {
+			m.matches = append(m.matches, i)
+		}
+	}
+}
+
+// scrollToCurrentMatch scrolls the viewport to show the current match
+func (m *Model) scrollToCurrentMatch() {
+	if len(m.matches) == 0 || m.currentMatch < 0 || m.currentMatch >= len(m.matches) {
+		return
+	}
+
+	// Get the line number in raw content
+	rawLine := m.matches[m.currentMatch]
+
+	// The viewport shows rendered content, which may have different line counts
+	// We need to estimate where in the rendered content this line appears
+	// Since Glamour can add blank lines, headers, etc., we estimate by ratio
+	rawLineCount := len(strings.Split(m.rawContent, "\n"))
+	renderedLineCount := m.viewport.TotalLineCount()
+
+	if rawLineCount == 0 {
+		return
+	}
+
+	// Estimate the rendered line position
+	ratio := float64(rawLine) / float64(rawLineCount)
+	targetLine := int(ratio * float64(renderedLineCount))
+
+	// Center the match in the viewport
+	halfView := m.viewport.VisibleLineCount() / 2
+	scrollTo := targetLine - halfView
+	if scrollTo < 0 {
+		scrollTo = 0
+	}
+
+	m.viewport.SetYOffset(scrollTo)
+}
+
+// clearSearch clears the search state
+func (m *Model) clearSearch() {
+	m.searchQuery = ""
+	m.matches = nil
+	m.currentMatch = 0
+	m.searchInput.SetValue("")
 }
 
 // HandleMouse handles mouse input (scrolling)
@@ -182,7 +340,42 @@ func (m Model) View() string {
 		return m.renderWelcome()
 	}
 
-	return m.viewport.View()
+	viewportContent := m.viewport.View()
+
+	// If search mode is active, show the search input at the bottom
+	if m.searchMode {
+		// Calculate available lines for viewport
+		lines := strings.Split(viewportContent, "\n")
+
+		// Reserve one line for search input
+		maxLines := m.height - 1
+		if len(lines) > maxLines {
+			lines = lines[:maxLines]
+		}
+
+		// Build search input line
+		searchLine := m.renderSearchInput()
+
+		// Pad with empty lines if needed to push search to bottom
+		for len(lines) < maxLines {
+			lines = append(lines, "")
+		}
+		lines = append(lines, searchLine)
+
+		return strings.Join(lines, "\n")
+	}
+
+	return viewportContent
+}
+
+// renderSearchInput renders the search input line
+func (m Model) renderSearchInput() string {
+	inputStyle := lipgloss.NewStyle().
+		Background(lipgloss.AdaptiveColor{Light: "#F0F0F0", Dark: "#2A2A2A"}).
+		Foreground(styles.Highlight).
+		Width(m.width - 2)
+
+	return inputStyle.Render(m.searchInput.View())
 }
 
 // renderWelcome renders the welcome message when no file is selected
@@ -260,6 +453,9 @@ func (m *Model) SetSize(width, height int) {
 		_ = m.renderer.SetWidth(width - 4) // Account for padding
 	}
 
+	// Update search input width
+	m.searchInput.Width = width - 10
+
 	// Re-render content if we have any
 	if m.rawContent != "" && m.renderer != nil {
 		rendered, err := m.renderer.Render(m.rawContent)
@@ -316,6 +512,39 @@ func (m Model) TotalLines() int {
 // VisibleLines returns the number of visible lines
 func (m Model) VisibleLines() int {
 	return m.viewport.VisibleLineCount()
+}
+
+// IsSearchMode returns whether search input is active
+func (m Model) IsSearchMode() bool {
+	return m.searchMode
+}
+
+// SearchQuery returns the current search query
+func (m Model) SearchQuery() string {
+	return m.searchQuery
+}
+
+// MatchCount returns the number of matches found
+func (m Model) MatchCount() int {
+	return len(m.matches)
+}
+
+// CurrentMatchIndex returns the current match index (1-based for display)
+func (m Model) CurrentMatchIndex() int {
+	if len(m.matches) == 0 {
+		return 0
+	}
+	return m.currentMatch + 1
+}
+
+// HasActiveSearch returns whether there's an active search with results
+func (m Model) HasActiveSearch() bool {
+	return m.searchQuery != "" && len(m.matches) > 0
+}
+
+// HasSearchNoMatches returns whether there's a search query with no results
+func (m Model) HasSearchNoMatches() bool {
+	return m.searchQuery != "" && len(m.matches) == 0
 }
 
 // LoadFile creates a command to load a file

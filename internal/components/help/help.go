@@ -102,11 +102,20 @@ func (m Model) View() string {
 			},
 		},
 		{
-			Title: "Search",
+			Title: "File Tree Filter",
 			Bindings: []KeyBinding{
-				{Key: "/", Desc: "Enter filter mode"},
+				{Key: "/", Desc: "Enter filter mode (file tree)"},
 				{Key: "Esc", Desc: "Clear filter / Exit"},
 				{Key: "Enter", Desc: "Accept filter"},
+			},
+		},
+		{
+			Title: "Preview Search",
+			Bindings: []KeyBinding{
+				{Key: "/", Desc: "Search in content (preview)"},
+				{Key: "n", Desc: "Next match"},
+				{Key: "N", Desc: "Previous match"},
+				{Key: "Esc", Desc: "Clear search"},
 			},
 		},
 		{

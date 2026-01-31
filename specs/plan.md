@@ -141,6 +141,46 @@ local-md/
 
 **Deliverable:** Polished, professional-looking application
 
+### Phase 7: Mouse Scrolling & In-Preview Search
+
+**Goal:** Enhanced UX with mouse support and content search
+
+#### 7.1 Mouse Scrolling
+
+**Tasks:**
+1. Route mouse events based on cursor position (X coordinate)
+2. Calculate panel boundary using existing `PanelWidths()`
+3. Forward `MouseWheelUp`/`MouseWheelDown` to hovered panel
+4. File tree list component handles mouse scroll
+5. Preview viewport component handles mouse scroll
+
+**Note:** Mouse support already enabled via `tea.WithMouseCellMotion()` in main.go. Viewport and list components have built-in mouse handling - we just need proper event routing.
+
+**Deliverable:** Scroll either panel with mouse wheel based on hover position
+
+#### 7.2 In-Preview Search
+
+**Tasks:**
+1. Add search state to preview Model (`searchMode`, `searchQuery`, `matches`, `currentMatch`)
+2. Add `textinput` component from bubbles for search query entry
+3. Implement `/` key handler in preview to enter search mode
+4. Search in `rawContent` (plain markdown, no ANSI codes)
+5. Store matching line numbers in `matches` slice
+6. Implement `n`/`N` keys for next/previous match navigation
+7. Scroll viewport to matching line on navigation
+8. Wrap around when reaching end/beginning of matches
+9. Update status bar to show search state (`[search: "query"] match 2/5`)
+10. Render search input at bottom of preview panel when in search mode
+11. Update help overlay with search keybindings
+
+**Design decisions:**
+- Case-insensitive search by default (most useful for content search)
+- Search persists after manual scrolling (n/N still work)
+- Approximate line mapping to rendered content (acceptable trade-off vs complexity)
+- Wrap around at match boundaries
+
+**Deliverable:** Search within preview content with match navigation
+
 ## Key Bindings Specification
 
 | Key | Context | Action |
@@ -150,14 +190,19 @@ local-md/
 | `Enter` | File tree | Open file / Toggle directory |
 | `Tab` | Global | Switch focus between panels |
 | `/` | File tree | Enter filter mode |
+| `/` | Preview | Enter search mode |
 | `Esc` | Filter mode | Exit filter, clear filter |
+| `Esc` | Search mode | Exit search, clear search |
 | `Esc` | Normal | Clear selection / Reset view |
 | `PgUp` / `Ctrl+u` | Preview | Scroll up |
 | `PgDn` / `Ctrl+d` | Preview | Scroll down |
 | `g` | Preview | Go to top |
 | `G` | Preview | Go to bottom |
+| `n` | Preview (search active) | Jump to next match |
+| `N` | Preview (search active) | Jump to previous match |
 | `?` | Global | Toggle help overlay |
 | `q` / `Ctrl+c` | Global | Quit application |
+| Mouse wheel | Hovered panel | Scroll up/down |
 
 ## Message Types
 
@@ -241,4 +286,5 @@ require (
 | Phase 4: Filter | 1 hour |
 | Phase 5: Watching | 1-2 hours |
 | Phase 6: Polish | 2-3 hours |
-| **Total** | **8-13 hours** |
+| Phase 7: Mouse & Search | 2-3 hours |
+| **Total** | **10-16 hours** |

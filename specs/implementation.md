@@ -1,6 +1,6 @@
 # Local MD Viewer - Implementation Status
 
-## Current Status: Phase 7.1 Complete, 7.2 Pending
+## Current Status: Phase 7 Complete
 
 Last Updated: 2026-01-31
 
@@ -112,7 +112,7 @@ Last Updated: 2026-01-31
 
 ## Phase 7: Mouse Scrolling & In-Preview Search
 
-**Status:** 7.1 Complete, 7.2 Pending
+**Status:** Complete
 
 ### 7.1 Mouse Scrolling
 
@@ -127,17 +127,17 @@ Last Updated: 2026-01-31
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Add search state to preview Model | Pending | `searchMode`, `searchQuery`, `matches`, `currentMatch` |
-| Add textinput component | Pending | From `bubbles/textinput` |
-| Handle `/` key in preview | Pending | Enter search mode |
-| Search in rawContent | Pending | Case-insensitive |
-| Store matching line numbers | Pending | In `matches` slice |
-| Implement `n`/`N` navigation | Pending | Next/previous match |
-| Scroll to match line | Pending | Use viewport scroll methods |
-| Wrap around at boundaries | Pending | Last match → first, first → last |
-| Update status bar | Pending | Show `[search: "query"] match X/Y` |
-| Render search input in view | Pending | Bottom of preview panel |
-| Update help overlay | Pending | Add search keybindings |
+| Add search state to preview Model | Done | `searchMode`, `searchQuery`, `matches`, `currentMatch` fields |
+| Add textinput component | Done | From `bubbles/textinput`, styled with filter styles |
+| Handle `/` key in preview | Done | Enter search mode, focus textinput |
+| Search in rawContent | Done | Case-insensitive via `strings.ToLower` |
+| Store matching line numbers | Done | In `matches` slice of raw line indices |
+| Implement `n`/`N` navigation | Done | Next/previous match with wrap-around |
+| Scroll to match line | Done | `scrollToCurrentMatch()` estimates rendered line position |
+| Wrap around at boundaries | Done | Modulo arithmetic for n, bounds check for N |
+| Update status bar | Done | Shows `[query: X/Y]` or `[query: no matches]` |
+| Render search input in view | Done | Bottom of preview panel when searchMode active |
+| Update help overlay | Done | Added "Preview Search" section with n/N/Esc keys |
 
 **Blockers:** None
 
@@ -253,3 +253,11 @@ After Phase 7 completion, potential future enhancements:
   - File tree uses bubbles list's native mouse wheel support
   - Preview component `HandleMouse()` scrolls 3 lines per wheel tick
   - Panel boundary calculated from `PanelWidths()` + border offset
+- **Phase 7.2 Complete**: In-Preview Search
+  - `/` key enters search mode with textinput at bottom of preview
+  - Case-insensitive search in raw markdown content
+  - `n`/`N` navigation between matches with wrap-around
+  - Status bar shows search query and match count (X/Y) or "no matches"
+  - `Esc` clears search and returns to normal mode
+  - Help overlay updated with "Preview Search" section
+  - Search state cleared when loading a new file

@@ -120,6 +120,20 @@ var (
 			Background(lipgloss.AdaptiveColor{Light: "#F0F0F0", Dark: "#2A2A2A"})
 )
 
+// Search styles (Phase 7.2)
+var (
+	SearchPromptStyle = lipgloss.NewStyle().
+				Foreground(Accent).
+				Bold(true)
+
+	SearchMatchStyle = lipgloss.NewStyle().
+				Foreground(Success)
+
+	SearchNoMatchStyle = lipgloss.NewStyle().
+				Foreground(Warning).
+				Italic(true)
+)
+
 // Help styles
 var (
 	HelpKeyStyle = lipgloss.NewStyle().

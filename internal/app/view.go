@@ -154,15 +154,37 @@ func (m Model) renderStatusBar() string {
 			{"q", "quit"},
 		}
 	} else {
-		hints = []struct {
-			key  string
-			desc string
-		}{
-			{"↑↓", "scroll"},
-			{"g/G", "top/bottom"},
-			{"Tab", "switch"},
-			{"?", "help"},
-			{"q", "quit"},
+		// Preview panel - show search mode or normal hints
+		if m.preview.IsSearchMode() {
+			hints = []struct {
+				key  string
+				desc string
+			}{
+				{"⏎", "search"},
+				{"Esc", "cancel"},
+			}
+		} else if m.preview.HasActiveSearch() {
+			hints = []struct {
+				key  string
+				desc string
+			}{
+				{"n/N", "next/prev match"},
+				{"Esc", "clear search"},
+				{"/", "new search"},
+				{"?", "help"},
+			}
+		} else {
+			hints = []struct {
+				key  string
+				desc string
+			}{
+				{"↑↓", "scroll"},
+				{"g/G", "top/bottom"},
+				{"/", "search"},
+				{"Tab", "switch"},
+				{"?", "help"},
+				{"q", "quit"},
+			}
 		}
 	}
 
@@ -207,7 +229,18 @@ func (m Model) renderStatusBar() string {
 			watchIndicator = styles.StatusWatchingStyle.Render(" [watching]")
 		}
 
-		rightInfo = fileName + watchIndicator + " " + scrollIndicator
+		// Add search indicator if search is active
+		searchIndicator := ""
+		if m.preview.IsSearchMode() {
+			searchIndicator = styles.SearchPromptStyle.Render(" [searching]")
+		} else if m.preview.HasActiveSearch() {
+			matchInfo := itoa(m.preview.CurrentMatchIndex()) + "/" + itoa(m.preview.MatchCount())
+			searchIndicator = styles.SearchMatchStyle.Render(" [" + m.preview.SearchQuery() + ": " + matchInfo + "]")
+		} else if m.preview.HasSearchNoMatches() {
+			searchIndicator = styles.SearchNoMatchStyle.Render(" [" + m.preview.SearchQuery() + ": no matches]")
+		}
+
+		rightInfo = fileName + watchIndicator + searchIndicator + " " + scrollIndicator
 	}
 
 	// Calculate spacing and add right info

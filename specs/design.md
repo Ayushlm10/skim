@@ -82,11 +82,19 @@ The visual design follows a minimal, editorial aesthetic:
 - Enter to open files or expand/collapse directories
 - Tab to switch focus between file tree and preview
 - Page Up/Down to scroll preview content
+- Mouse wheel scrolls whichever panel is hovered (no click required)
 
-**Search & Filter**
+**File Filtering (in file tree)**
 - `/` activates filter mode in file tree
 - Fuzzy matching on filenames
 - Esc to clear filter and return to normal mode
+
+**Content Search (in preview)**
+- `/` activates search mode when preview is focused
+- Case-insensitive search within markdown content
+- `n` / `N` to navigate between matches
+- Status bar shows current match position (e.g., "match 2/5")
+- Esc to clear search and return to normal mode
 
 **File Watching**
 - Automatic refresh when viewed file changes
@@ -105,7 +113,8 @@ App (main model)
 │   └── FilterInput (built-in)
 ├── Preview (right panel)
 │   ├── Viewport (bubbles/viewport)
-│   └── GlamourRenderer
+│   ├── GlamourRenderer
+│   └── SearchInput (textinput for content search)
 ├── StatusBar (bottom)
 └── FileWatcher (background)
 ```
