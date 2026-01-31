@@ -31,9 +31,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		return m.handleKeypress(msg)
 
-	// Mouse input (for future use)
+	// Mouse input - route to appropriate panel based on X coordinate
 	case tea.MouseMsg:
-		return m, nil
+		return m.handleMouse(msg)
 
 	// Custom messages
 	case FileSelectedMsg:
@@ -185,5 +185,30 @@ func (m Model) handlePreviewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// Delegate to preview component
 	var cmd tea.Cmd
 	m.preview, cmd = m.preview.HandleKey(msg)
+	return m, cmd
+}
+
+// handleMouse routes mouse events to the appropriate panel based on X coordinate
+func (m Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
+	// Only handle mouse wheel events for scrolling
+	if msg.Button != tea.MouseButtonWheelUp && msg.Button != tea.MouseButtonWheelDown {
+		return m, nil
+	}
+
+	// Calculate panel boundary (file tree width + left border)
+	fileTreeWidth, _ := m.PanelWidths()
+	panelBoundary := fileTreeWidth + 2 // +2 for left panel border
+
+	// Route to appropriate panel based on mouse X position
+	if msg.X < panelBoundary {
+		// Mouse is over file tree panel
+		var cmd tea.Cmd
+		m.fileTree, cmd = m.fileTree.Update(msg)
+		return m, cmd
+	}
+
+	// Mouse is over preview panel
+	var cmd tea.Cmd
+	m.preview, cmd = m.preview.HandleMouse(msg)
 	return m, cmd
 }

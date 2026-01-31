@@ -58,6 +58,10 @@ func New(width, height int) Model {
 	vp.Style = lipgloss.NewStyle()
 	vp.SetContent("")
 
+	// Enable mouse wheel scrolling with snappy delta
+	vp.MouseWheelEnabled = true
+	vp.MouseWheelDelta = 5
+
 	// Create renderer (with padding for viewport)
 	renderer, _ := NewRenderer(width - 4)
 
@@ -158,6 +162,14 @@ func (m Model) HandleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+// HandleMouse handles mouse input (scrolling)
+func (m Model) HandleMouse(msg tea.MouseMsg) (Model, tea.Cmd) {
+	// Forward to viewport - it handles mouse wheel natively
+	var cmd tea.Cmd
+	m.viewport, cmd = m.viewport.Update(msg)
+	return m, cmd
 }
 
 // View renders the component

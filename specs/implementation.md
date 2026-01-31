@@ -1,6 +1,6 @@
 # Local MD Viewer - Implementation Status
 
-## Current Status: Phase 6 Complete
+## Current Status: Phase 7.1 Complete, 7.2 Pending
 
 Last Updated: 2026-01-31
 
@@ -110,6 +110,39 @@ Last Updated: 2026-01-31
 
 ---
 
+## Phase 7: Mouse Scrolling & In-Preview Search
+
+**Status:** 7.1 Complete, 7.2 Pending
+
+### 7.1 Mouse Scrolling
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Route mouse events by X coordinate | Done | `handleMouse()` in `internal/app/update.go` |
+| Calculate panel boundary | Done | Uses `PanelWidths()` + border offset |
+| Forward to file tree on left hover | Done | Bubbles list handles mouse wheel natively |
+| Forward to preview on right hover | Done | `HandleMouse()` in preview component, 3-line scroll |
+
+### 7.2 In-Preview Search
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Add search state to preview Model | Pending | `searchMode`, `searchQuery`, `matches`, `currentMatch` |
+| Add textinput component | Pending | From `bubbles/textinput` |
+| Handle `/` key in preview | Pending | Enter search mode |
+| Search in rawContent | Pending | Case-insensitive |
+| Store matching line numbers | Pending | In `matches` slice |
+| Implement `n`/`N` navigation | Pending | Next/previous match |
+| Scroll to match line | Pending | Use viewport scroll methods |
+| Wrap around at boundaries | Pending | Last match → first, first → last |
+| Update status bar | Pending | Show `[search: "query"] match X/Y` |
+| Render search input in view | Pending | Bottom of preview panel |
+| Update help overlay | Pending | Add search keybindings |
+
+**Blockers:** None
+
+---
+
 ## Files Created
 
 | File | Status | Description |
@@ -159,11 +192,11 @@ None yet.
 
 ## Next Steps
 
-All core phases complete. Potential future enhancements:
+After Phase 7 completion, potential future enhancements:
 1. Custom themes / theme switching
 2. Bookmarks / favorites
-3. Search within file content
-4. External editor integration (open in $EDITOR)
+3. External editor integration (open in $EDITOR)
+4. Search across all files (global search)
 
 ---
 
@@ -215,3 +248,8 @@ All core phases complete. Potential future enhancements:
   - Error display in status bar (truncated) and preview (detailed)
   - Improved empty states for no files and welcome screen
   - Added help hint to status bar
+- **Phase 7.1 Complete**: Mouse Scrolling
+  - Route mouse wheel events by X coordinate to hovered panel
+  - File tree uses bubbles list's native mouse wheel support
+  - Preview component `HandleMouse()` scrolls 3 lines per wheel tick
+  - Panel boundary calculated from `PanelWidths()` + border offset
