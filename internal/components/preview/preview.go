@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Ayushlm10/skim/internal/styles"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -19,6 +20,19 @@ type FileLoadedMsg struct {
 	Path    string
 	Content string
 	Error   error
+}
+
+// RerenderCompleteMsg is sent when async re-rendering is complete
+type RerenderCompleteMsg struct {
+	Content string
+	Width   int
+	Error   error
+}
+
+// rerenderTickMsg is sent to trigger the actual re-render after a tiny delay
+type rerenderTickMsg struct {
+	content string
+	width   int
 }
 
 // Model is the preview component model
@@ -57,6 +71,7 @@ type Model struct {
 	searchQuery  string          // Current search query (after Enter)
 	matches      []int           // Line numbers in rawContent that match
 	currentMatch int             // Index into matches slice (0-based)
+
 }
 
 // New creates a new preview component
@@ -111,6 +126,40 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		m.SetSize(msg.Width, msg.Height)
 		return m, nil
 
+	case rerenderTickMsg:
+		// Delayed re-render trigger - now do the actual rendering
+		return m, doRerender(msg.content, msg.width)
+
+	case RerenderCompleteMsg:
+		// Async re-render complete - update content if no error
+		if msg.Error != nil {
+			// Keep existing content on error
+			return m, nil
+		}
+
+		// Preserve scroll position
+		yOffset := m.viewport.YOffset
+
+		// Update rendered content
+		m.renderedContent = msg.Content
+
+		// Update renderer width
+		if m.renderer != nil {
+			_ = m.renderer.SetWidth(msg.Width)
+		}
+
+		// Apply content (with search highlighting if active)
+		if m.searchQuery != "" {
+			m.applySearchHighlight()
+		} else {
+			m.viewport.SetContent(msg.Content)
+		}
+
+		// Restore scroll position (proportionally if line count changed)
+		m.viewport.SetYOffset(yOffset)
+
+		return m, nil
+
 	case FileLoadedMsg:
 		// Clear any existing search when loading a new file
 		m.clearSearch()
@@ -125,6 +174,12 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			m.filePath = msg.Path
 			m.rawContent = msg.Content
 			m.err = nil
+
+			// Update renderer width before rendering
+			renderWidth := m.width - 4
+			if m.renderer != nil {
+				_ = m.renderer.SetWidth(renderWidth)
+			}
 
 			// Render the content
 			rendered, err := m.renderer.Render(msg.Content)
@@ -615,33 +670,21 @@ func (m Model) renderError(err error) string {
 }
 
 // SetSize updates the component size
+// Only updates viewport dimensions - does NOT re-render content for instant resize
 func (m *Model) SetSize(width, height int) {
 	m.width = width
 	m.height = height
 	m.viewport.Width = width
 	m.viewport.Height = height
 
-	// Update renderer width for word wrap
-	if m.renderer != nil {
-		_ = m.renderer.SetWidth(width - 4) // Account for padding
-	}
-
 	// Update search input width
 	m.searchInput.Width = width - 10
 
-	// Re-render content if we have any
-	if m.rawContent != "" && m.renderer != nil {
-		rendered, err := m.renderer.Render(m.rawContent)
-		if err == nil {
-			m.renderedContent = rendered
-			// If there's an active search, apply highlighting
-			if m.searchQuery != "" {
-				m.applySearchHighlight()
-			} else {
-				m.viewport.SetContent(rendered)
-			}
-		}
-	}
+	// NOTE: We intentionally do NOT re-render content here.
+	// Re-rendering through Glamour is expensive (50-200ms+).
+	// The existing rendered content displays fine at different widths,
+	// just with potentially non-ideal word wrapping.
+	// Content is rendered with correct width on file load.
 }
 
 // SetFocused sets the focus state
@@ -740,5 +783,39 @@ func LoadFile(path string) tea.Cmd {
 			Path:    path,
 			Content: string(content),
 		}
+	}
+}
+
+// Rerender returns a command to re-render the current content at the current width
+// This uses a tiny delay (1ms) to ensure the UI updates first, then re-renders
+func (m Model) Rerender() tea.Cmd {
+	// Nothing to re-render if no content
+	if m.rawContent == "" {
+		return nil
+	}
+
+	content := m.rawContent
+	width := m.width - 4 // Account for padding
+
+	// Use tea.Tick with 1ms delay to let the UI update first
+	return tea.Tick(time.Millisecond, func(t time.Time) tea.Msg {
+		return rerenderTickMsg{content: content, width: width}
+	})
+}
+
+// doRerender performs the actual re-rendering in a command
+func doRerender(content string, width int) tea.Cmd {
+	return func() tea.Msg {
+		renderer, err := NewRenderer(width)
+		if err != nil {
+			return RerenderCompleteMsg{Error: err, Width: width}
+		}
+
+		rendered, err := renderer.Render(content)
+		if err != nil {
+			return RerenderCompleteMsg{Error: err, Width: width}
+		}
+
+		return RerenderCompleteMsg{Content: rendered, Width: width}
 	}
 }

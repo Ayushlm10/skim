@@ -100,6 +100,7 @@ func (m Model) View() string {
 				{Key: "PgDn / Ctrl+d", Desc: "Scroll down half page"},
 				{Key: "g", Desc: "Go to top"},
 				{Key: "G", Desc: "Go to bottom"},
+				{Key: "f", Desc: "Toggle fullscreen mode"},
 			},
 		},
 		{

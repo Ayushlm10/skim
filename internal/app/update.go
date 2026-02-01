@@ -23,7 +23,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		fileTreeWidth, previewWidth := m.PanelWidths()
 		contentHeight := m.ContentHeight()
 		m.fileTree.SetSize(fileTreeWidth-2, contentHeight)
-		m.preview.SetSize(previewWidth-2, contentHeight)
+
+		// Preview width depends on fullscreen state
+		if m.fullscreenPreview {
+			fullWidth := m.Width - 4 // Full width minus borders
+			m.preview.SetSize(fullWidth, contentHeight)
+		} else {
+			m.preview.SetSize(previewWidth-2, contentHeight)
+		}
 
 		return m, nil
 
@@ -94,6 +101,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, cmd
 
+	case preview.RerenderCompleteMsg:
+		// Forward async re-render completion to preview component
+		var cmd tea.Cmd
+		m.preview, cmd = m.preview.Update(msg)
+		return m, cmd
+
 	// Watcher messages (Phase 5)
 	case watcher.FileChangedMsg:
 		// File changed, reload it
@@ -121,6 +134,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.FocusedPanel == FileTreePanel {
 		var cmd tea.Cmd
 		m.fileTree, cmd = m.fileTree.Update(msg)
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	}
+
+	// Always forward unknown messages to preview for tick/rerender handling
+	{
+		var cmd tea.Cmd
+		m.preview, cmd = m.preview.Update(msg)
 		if cmd != nil {
 			cmds = append(cmds, cmd)
 		}
@@ -161,6 +183,15 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.FocusedPanel == FileTreePanel {
 			m.FocusedPanel = PreviewPanel
 		} else {
+			// If in fullscreen, exit fullscreen when switching to file tree
+			if m.fullscreenPreview {
+				m.fullscreenPreview = false
+				// Resize preview back to normal width and re-render
+				_, previewWidth := m.PanelWidths()
+				m.preview.SetSize(previewWidth-2, m.ContentHeight())
+				m.FocusedPanel = FileTreePanel
+				return m, m.preview.Rerender()
+			}
 			m.FocusedPanel = FileTreePanel
 		}
 		return m, nil
@@ -187,6 +218,23 @@ func (m Model) handleFileTreeKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 // handlePreviewKeys handles keys when preview is focused
 func (m Model) handlePreviewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Handle fullscreen toggle
+	if msg.String() == "f" && !m.preview.IsSearchMode() {
+		m.fullscreenPreview = !m.fullscreenPreview
+		// Resize preview based on fullscreen state
+		if m.fullscreenPreview {
+			// Full width minus borders
+			fullWidth := m.Width - 4
+			m.preview.SetSize(fullWidth, m.ContentHeight())
+		} else {
+			// Normal width
+			_, previewWidth := m.PanelWidths()
+			m.preview.SetSize(previewWidth-2, m.ContentHeight())
+		}
+		// Trigger delayed re-render - toggle is instant, re-render happens after 1ms
+		return m, m.preview.Rerender()
+	}
+
 	// Delegate to preview component
 	var cmd tea.Cmd
 	m.preview, cmd = m.preview.HandleKey(msg)

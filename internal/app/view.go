@@ -60,8 +60,17 @@ func (m Model) renderHeader() string {
 
 // renderPanels renders the file tree and preview panels side by side
 func (m Model) renderPanels() string {
-	fileTreeWidth, previewWidth := m.PanelWidths()
 	contentHeight := m.ContentHeight()
+
+	// Fullscreen mode: render only preview panel
+	if m.fullscreenPreview {
+		fullWidth := m.Width - 4 // Full width minus borders
+		previewContent := m.renderPreview(fullWidth, contentHeight)
+		return m.stylePanelBox(previewContent, fullWidth+2, contentHeight, true)
+	}
+
+	// Normal mode: render both panels
+	fileTreeWidth, previewWidth := m.PanelWidths()
 
 	// Render file tree panel
 	fileTreeContent := m.renderFileTree(fileTreeWidth-2, contentHeight)
@@ -173,6 +182,20 @@ func (m Model) renderStatusBar() string {
 				{"/", "new search"},
 				{"?", "help"},
 			}
+		} else if m.fullscreenPreview {
+			// Fullscreen mode hints
+			hints = []struct {
+				key  string
+				desc string
+			}{
+				{"↑↓", "scroll"},
+				{"g/G", "top/bottom"},
+				{"/", "search"},
+				{"f", "exit fullscreen"},
+				{"Tab", "switch"},
+				{"?", "help"},
+				{"q", "quit"},
+			}
 		} else {
 			hints = []struct {
 				key  string
@@ -181,6 +204,7 @@ func (m Model) renderStatusBar() string {
 				{"↑↓", "scroll"},
 				{"g/G", "top/bottom"},
 				{"/", "search"},
+				{"f", "fullscreen"},
 				{"Tab", "switch"},
 				{"?", "help"},
 				{"q", "quit"},

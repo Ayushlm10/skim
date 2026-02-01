@@ -35,12 +35,13 @@ type Model struct {
 	watchedFile string
 
 	// UI state
-	ready        bool
-	filterActive bool
-	filterText   string
-	loading      bool
-	lastError    string
-	showIgnored  bool // Whether ignored directories are visible
+	ready             bool
+	filterActive      bool
+	filterText        string
+	loading           bool
+	lastError         string
+	showIgnored       bool // Whether ignored directories are visible
+	fullscreenPreview bool // Whether preview is in fullscreen mode
 }
 
 // New creates a new application model
