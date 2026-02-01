@@ -26,6 +26,11 @@ type FilterChangedMsg struct {
 	Value  string
 }
 
+// IgnoredDirsToggledMsg is sent when ignored directories visibility is toggled
+type IgnoredDirsToggledMsg struct {
+	ShowIgnored bool
+}
+
 // Model is the file tree component model
 type Model struct {
 	// Root path being scanned
@@ -202,9 +207,26 @@ func (m Model) handleKey(msg tea.KeyMsg) (Model, tea.Cmd) {
 			}
 		}
 		return m, nil
+
+	case "i":
+		// Toggle ignored directories visibility
+		return m.toggleIgnoredDirs()
 	}
 
 	return m, nil
+}
+
+// toggleIgnoredDirs toggles the visibility of ignored directories and rescans
+func (m Model) toggleIgnoredDirs() (Model, tea.Cmd) {
+	m.scanOptions.ShowIgnored = !m.scanOptions.ShowIgnored
+
+	// Re-scan the directory with new options
+	return m, tea.Batch(
+		m.scanRoot(),
+		func() tea.Msg {
+			return IgnoredDirsToggledMsg{ShowIgnored: m.scanOptions.ShowIgnored}
+		},
+	)
 }
 
 // handleSelect handles enter key - opens file or toggles directory
@@ -336,6 +358,11 @@ func (m Model) FilterValue() string {
 // HasActiveFilter returns true if there's a non-empty filter applied
 func (m Model) HasActiveFilter() bool {
 	return m.list.FilterValue() != ""
+}
+
+// ShowIgnored returns true if ignored directories are being shown
+func (m Model) ShowIgnored() bool {
+	return m.scanOptions.ShowIgnored
 }
 
 // treeListStyles returns custom styles for the tree list

@@ -148,6 +148,7 @@ func (m Model) renderStatusBar() string {
 			{"↑↓", "navigate"},
 			{"⏎", "open"},
 			{"/", "filter"},
+			{"i", "ignored"},
 			{"Tab", "switch"},
 			{"?", "help"},
 			{"q", "quit"},
@@ -250,6 +251,9 @@ func (m Model) renderStatusBar() string {
 		}
 
 		rightInfo = fileName + watchIndicator + " " + scrollIndicator
+	} else if m.FocusedPanel == FileTreePanel && m.showIgnored {
+		// Show indicator when ignored directories are visible
+		rightInfo = styles.StatusIgnoredStyle.Render("[showing ignored]")
 	}
 
 	// Calculate spacing and add right info

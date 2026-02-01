@@ -90,6 +90,7 @@ func (m Model) View() string {
 				{Key: "↓ / j", Desc: "Move down"},
 				{Key: "Enter", Desc: "Open file / Toggle folder"},
 				{Key: "Tab", Desc: "Switch panel focus"},
+				{Key: "i", Desc: "Toggle ignored directories"},
 			},
 		},
 		{

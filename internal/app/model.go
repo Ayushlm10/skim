@@ -40,6 +40,7 @@ type Model struct {
 	filterText   string
 	loading      bool
 	lastError    string
+	showIgnored  bool // Whether ignored directories are visible
 }
 
 // New creates a new application model

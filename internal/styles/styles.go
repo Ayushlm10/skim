@@ -106,6 +106,10 @@ var (
 	StatusErrorStyle = lipgloss.NewStyle().
 				Foreground(Error).
 				Bold(true)
+
+	StatusIgnoredStyle = lipgloss.NewStyle().
+				Foreground(Warning).
+				Bold(true)
 )
 
 // Filter input styles

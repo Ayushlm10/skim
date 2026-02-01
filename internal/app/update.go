@@ -57,6 +57,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.filterText = msg.Value
 		return m, nil
 
+	// File tree ignored directories toggled
+	case filetree.IgnoredDirsToggledMsg:
+		m.showIgnored = msg.ShowIgnored
+		return m, nil
+
 	// File tree component messages
 	case filetree.FileSelectedMsg:
 		// Load the file content when a file is selected in the tree
