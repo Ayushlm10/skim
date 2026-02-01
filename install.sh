@@ -6,7 +6,7 @@ set -e
 
 REPO="Ayushlm10/skim"
 BINARY_NAME="skim"
-INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+INSTALL_DIR="${INSTALL_DIR:-${HOME}/.local/bin}"
 
 # Detect OS
 detect_os() {
@@ -107,8 +107,22 @@ main() {
 
     echo ""
     echo "Successfully installed ${BINARY_NAME} v${VERSION} to ${INSTALL_DIR}"
+    
+    # Check if install dir is in PATH
+    case ":$PATH:" in
+        *":${INSTALL_DIR}:"*) ;;
+        *)
+            echo ""
+            echo "NOTE: ${INSTALL_DIR} is not in your PATH."
+            echo "Add it by running:"
+            echo "  export PATH=\"\$PATH:${INSTALL_DIR}\""
+            echo ""
+            echo "Or add that line to your ~/.bashrc or ~/.zshrc"
+            ;;
+    esac
+    
     echo ""
-    echo "Run 'skim --help' to get started"
+    echo "Run 'skim' to get started"
 }
 
 main
