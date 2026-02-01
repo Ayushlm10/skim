@@ -23,11 +23,23 @@ Now that I've been working with a lot of markdown files to help my coding agents
 
 ## Installation
 
+### Quick install (macOS/Linux)
+
+```bash
+curl -sSfL https://raw.githubusercontent.com/Ayushlm10/skim/main/install.sh | sh
+```
+
+### Go install
+
 ```bash
 go install github.com/Ayushlm10/skim@latest
 ```
 
-Or build from source:
+### Download binary
+
+Download the latest release for your platform from [GitHub Releases](https://github.com/Ayushlm10/skim/releases).
+
+### Build from source
 
 ```bash
 git clone https://github.com/Ayushlm10/skim.git
