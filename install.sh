@@ -90,6 +90,12 @@ main() {
 
     # Install binary
     echo "Installing to ${INSTALL_DIR}..."
+    
+    # Create install directory if it doesn't exist
+    if [ ! -d "$INSTALL_DIR" ]; then
+        mkdir -p "$INSTALL_DIR" 2>/dev/null || sudo mkdir -p "$INSTALL_DIR"
+    fi
+    
     if [ -w "$INSTALL_DIR" ]; then
         mv "${TMP_DIR}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
     else
