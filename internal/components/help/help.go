@@ -120,6 +120,13 @@ func (m Model) View() string {
 			},
 		},
 		{
+			Title: "View",
+			Bindings: []KeyBinding{
+				{Key: "f", Desc: "Toggle fullscreen preview"},
+				{Key: "Esc", Desc: "Exit fullscreen"},
+			},
+		},
+		{
 			Title: "General",
 			Bindings: []KeyBinding{
 				{Key: "?", Desc: "Toggle this help"},

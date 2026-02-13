@@ -19,11 +19,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.Height = msg.Height
 		m.ready = true
 
-		// Update component sizes
-		fileTreeWidth, previewWidth := m.PanelWidths()
-		contentHeight := m.ContentHeight()
-		m.fileTree.SetSize(fileTreeWidth-2, contentHeight)
-		m.preview.SetSize(previewWidth-2, contentHeight)
+		if m.fullscreen {
+			// In fullscreen, preview gets full terminal dimensions
+			m.preview.SetSize(m.Width-2, m.FullscreenContentHeight())
+		} else {
+			// Normal mode: update component sizes with panel split
+			fileTreeWidth, previewWidth := m.PanelWidths()
+			contentHeight := m.ContentHeight()
+			m.fileTree.SetSize(fileTreeWidth-2, contentHeight)
+			m.preview.SetSize(previewWidth-2, contentHeight)
+		}
 
 		return m, nil
 
@@ -157,16 +162,51 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case "tab":
-		// Switch panel focus
-		if m.FocusedPanel == FileTreePanel {
-			m.FocusedPanel = PreviewPanel
-		} else {
-			m.FocusedPanel = FileTreePanel
+		// Switch panel focus (no-op in fullscreen since preview is always focused)
+		if !m.fullscreen {
+			if m.FocusedPanel == FileTreePanel {
+				m.FocusedPanel = PreviewPanel
+			} else {
+				m.FocusedPanel = FileTreePanel
+			}
 		}
 		return m, nil
+
+	case "f":
+		// Don't toggle fullscreen if user is typing in search or filter
+		if m.preview.IsSearchMode() || m.filterActive {
+			break
+		}
+		m.fullscreen = !m.fullscreen
+		if m.fullscreen {
+			m.FocusedPanel = PreviewPanel
+			m.preview.SetSize(m.Width-2, m.FullscreenContentHeight())
+		} else {
+			fileTreeWidth, previewWidth := m.PanelWidths()
+			contentHeight := m.ContentHeight()
+			m.fileTree.SetSize(fileTreeWidth-2, contentHeight)
+			m.preview.SetSize(previewWidth-2, contentHeight)
+		}
+		return m, nil
+
+	case "esc":
+		// Exit fullscreen if active (and no search/filter is consuming Esc)
+		if m.fullscreen && !m.preview.IsSearchMode() && !m.preview.HasActiveSearch() {
+			m.fullscreen = false
+			fileTreeWidth, previewWidth := m.PanelWidths()
+			contentHeight := m.ContentHeight()
+			m.fileTree.SetSize(fileTreeWidth-2, contentHeight)
+			m.preview.SetSize(previewWidth-2, contentHeight)
+			return m, nil
+		}
 	}
 
 	// Panel-specific keys
+	if m.fullscreen {
+		// In fullscreen, all keys go to preview
+		return m.handlePreviewKeys(msg)
+	}
+
 	switch m.FocusedPanel {
 	case FileTreePanel:
 		return m.handleFileTreeKeys(msg)
@@ -198,6 +238,13 @@ func (m Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	// Only handle mouse wheel events for scrolling
 	if msg.Button != tea.MouseButtonWheelUp && msg.Button != tea.MouseButtonWheelDown {
 		return m, nil
+	}
+
+	// In fullscreen, all mouse events go to preview
+	if m.fullscreen {
+		var cmd tea.Cmd
+		m.preview, cmd = m.preview.HandleMouse(msg)
+		return m, cmd
 	}
 
 	// Calculate panel boundary (file tree width + left border)

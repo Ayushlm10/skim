@@ -41,6 +41,7 @@ type Model struct {
 	loading      bool
 	lastError    string
 	showIgnored  bool // Whether ignored directories are visible
+	fullscreen   bool // Whether preview is in fullscreen mode
 }
 
 // New creates a new application model
@@ -109,4 +110,12 @@ func (m Model) ContentHeight() int {
 	// Total overhead: 6 lines
 	// lipgloss.Height() sets inner height, border adds 2 more
 	return m.Height - 6
+}
+
+// FullscreenContentHeight returns the height available for preview in fullscreen mode
+func (m Model) FullscreenContentHeight() int {
+	// Total height minus:
+	// - newline before status bar (1 line)
+	// - status bar (1 line)
+	return m.Height - 2
 }

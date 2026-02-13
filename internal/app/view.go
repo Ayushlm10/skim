@@ -15,16 +15,19 @@ func (m Model) View() string {
 
 	var b strings.Builder
 
-	// Render header
-	b.WriteString(m.renderHeader())
-	b.WriteString("\n")
-
-	// Render main content (file tree + preview)
-	b.WriteString(m.renderPanels())
-	b.WriteString("\n")
-
-	// Render status bar
-	b.WriteString(m.renderStatusBar())
+	if m.fullscreen {
+		// Fullscreen: preview content + status bar only
+		b.WriteString(m.renderFullscreenPreview())
+		b.WriteString("\n")
+		b.WriteString(m.renderStatusBar())
+	} else {
+		// Normal mode: header + panels + status bar
+		b.WriteString(m.renderHeader())
+		b.WriteString("\n")
+		b.WriteString(m.renderPanels())
+		b.WriteString("\n")
+		b.WriteString(m.renderStatusBar())
+	}
 
 	baseView := b.String()
 
@@ -73,6 +76,22 @@ func (m Model) renderPanels() string {
 
 	// Join panels horizontally
 	return lipgloss.JoinHorizontal(lipgloss.Top, fileTreePanel, previewPanel)
+}
+
+// renderFullscreenPreview renders the preview taking the full terminal area
+func (m Model) renderFullscreenPreview() string {
+	content := m.preview.View()
+
+	fullHeight := m.FullscreenContentHeight()
+	lines := strings.Split(content, "\n")
+	for len(lines) < fullHeight {
+		lines = append(lines, "")
+	}
+	if len(lines) > fullHeight {
+		lines = lines[:fullHeight]
+	}
+
+	return strings.Join(lines, "\n")
 }
 
 // stylePanelBox applies panel styling with border
@@ -129,6 +148,11 @@ func (m Model) renderPreview(width, height int) string {
 
 // renderStatusBar renders the bottom status bar
 func (m Model) renderStatusBar() string {
+	// Check if we're in fullscreen mode
+	if m.fullscreen {
+		return m.renderFullscreenStatusBar()
+	}
+
 	// Check if we're in filter mode
 	if m.filterActive {
 		return m.renderFilterStatusBar()
@@ -149,6 +173,7 @@ func (m Model) renderStatusBar() string {
 			{"⏎", "open"},
 			{"/", "filter"},
 			{"i", "ignored"},
+			{"f", "fullscreen"},
 			{"Tab", "switch"},
 			{"?", "help"},
 			{"q", "quit"},
@@ -181,6 +206,7 @@ func (m Model) renderStatusBar() string {
 				{"↑↓", "scroll"},
 				{"g/G", "top/bottom"},
 				{"/", "search"},
+				{"f", "fullscreen"},
 				{"Tab", "switch"},
 				{"?", "help"},
 				{"q", "quit"},
@@ -297,6 +323,104 @@ func (m Model) renderFilterStatusBar() string {
 	spacerWidth := m.Width - statusWidth - filterWidth - 4
 	if spacerWidth > 0 {
 		statusContent = statusContent + strings.Repeat(" ", spacerWidth) + filterIndicator
+	}
+
+	return styles.StatusBarStyle.
+		Width(m.Width).
+		Render(statusContent)
+}
+
+// renderFullscreenStatusBar renders the status bar during fullscreen mode
+func (m Model) renderFullscreenStatusBar() string {
+	var hints []struct {
+		key  string
+		desc string
+	}
+
+	if m.preview.IsSearchMode() {
+		hints = []struct {
+			key  string
+			desc string
+		}{
+			{"⏎", "search"},
+			{"Esc", "cancel"},
+		}
+	} else if m.preview.HasActiveSearch() {
+		hints = []struct {
+			key  string
+			desc string
+		}{
+			{"n/N", "next/prev match"},
+			{"Esc", "clear search"},
+			{"/", "new search"},
+			{"f", "exit fullscreen"},
+		}
+	} else {
+		hints = []struct {
+			key  string
+			desc string
+		}{
+			{"↑↓", "scroll"},
+			{"g/G", "top/bottom"},
+			{"/", "search"},
+			{"f/Esc", "exit fullscreen"},
+			{"?", "help"},
+			{"q", "quit"},
+		}
+	}
+
+	var parts []string
+	for _, h := range hints {
+		part := styles.HelpKeyStyle.Render(h.key) + " " + styles.HelpDescStyle.Render(h.desc)
+		parts = append(parts, part)
+	}
+
+	separator := styles.HelpSeparatorStyle.Render("  │  ")
+	statusContent := strings.Join(parts, separator)
+
+	// Build right-side status info
+	var rightInfo string
+
+	if m.lastError != "" {
+		errMsg := m.lastError
+		if len(errMsg) > 30 {
+			errMsg = errMsg[:27] + "..."
+		}
+		rightInfo = styles.StatusErrorStyle.Render("error: " + errMsg)
+	} else if m.preview.IsSearchMode() {
+		searchIndicator := styles.SearchPromptStyle.Render("[searching]")
+		if m.preview.FileName() != "" {
+			rightInfo = styles.StatusValueStyle.Render(m.preview.FileName()) + " " + searchIndicator
+		} else {
+			rightInfo = searchIndicator
+		}
+	} else if m.preview.HasActiveSearch() || m.preview.HasSearchNoMatches() {
+		var searchIndicator string
+		if m.preview.HasActiveSearch() {
+			matchInfo := itoa(m.preview.CurrentMatchIndex()) + "/" + itoa(m.preview.MatchCount())
+			searchIndicator = styles.SearchMatchStyle.Render("[" + m.preview.SearchQuery() + ": " + matchInfo + "]")
+		} else {
+			searchIndicator = styles.SearchNoMatchStyle.Render("[" + m.preview.SearchQuery() + ": no matches]")
+		}
+		fileName := styles.StatusValueStyle.Render(m.preview.FileName())
+		scrollPct := int(m.preview.ScrollPercent() * 100)
+		scrollIndicator := styles.HelpDescStyle.Render("[" + itoa(scrollPct) + "%]")
+		rightInfo = fileName + " " + searchIndicator + " " + scrollIndicator
+	} else if m.preview.FilePath() != "" {
+		scrollPct := int(m.preview.ScrollPercent() * 100)
+		fileName := styles.StatusValueStyle.Render(m.preview.FileName())
+		scrollIndicator := styles.HelpDescStyle.Render("[" + itoa(scrollPct) + "%]")
+		fsIndicator := styles.StatusWatchingStyle.Render("[fullscreen]")
+		rightInfo = fileName + " " + fsIndicator + " " + scrollIndicator
+	}
+
+	if rightInfo != "" {
+		statusWidth := lipgloss.Width(statusContent)
+		rightWidth := lipgloss.Width(rightInfo)
+		spacerWidth := m.Width - statusWidth - rightWidth - 4
+		if spacerWidth > 0 {
+			statusContent = statusContent + strings.Repeat(" ", spacerWidth) + rightInfo
+		}
 	}
 
 	return styles.StatusBarStyle.
