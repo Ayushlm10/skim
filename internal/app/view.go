@@ -174,6 +174,7 @@ func (m Model) renderStatusBar() string {
 			{"/", "filter"},
 			{"i", "ignored"},
 			{"f", "fullscreen"},
+			{"t", "theme"},
 			{"Tab", "switch"},
 			{"?", "help"},
 			{"q", "quit"},
@@ -196,6 +197,7 @@ func (m Model) renderStatusBar() string {
 				{"n/N", "next/prev match"},
 				{"Esc", "clear search"},
 				{"/", "new search"},
+				{"t", "theme"},
 				{"?", "help"},
 			}
 		} else {
@@ -207,6 +209,7 @@ func (m Model) renderStatusBar() string {
 				{"g/G", "top/bottom"},
 				{"/", "search"},
 				{"f", "fullscreen"},
+				{"t", "theme"},
 				{"Tab", "switch"},
 				{"?", "help"},
 				{"q", "quit"},
@@ -353,6 +356,7 @@ func (m Model) renderFullscreenStatusBar() string {
 			{"n/N", "next/prev match"},
 			{"Esc", "clear search"},
 			{"/", "new search"},
+			{"t", "theme"},
 			{"f", "exit fullscreen"},
 		}
 	} else {
@@ -364,6 +368,7 @@ func (m Model) renderFullscreenStatusBar() string {
 			{"g/G", "top/bottom"},
 			{"/", "search"},
 			{"f/Esc", "exit fullscreen"},
+			{"t", "theme"},
 			{"?", "help"},
 			{"q", "quit"},
 		}

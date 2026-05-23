@@ -5,6 +5,7 @@ import (
 	"github.com/Ayushlm10/skim/internal/components/preview"
 	"github.com/Ayushlm10/skim/internal/watcher"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // Update handles messages and updates the model
@@ -170,6 +171,14 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.FocusedPanel = FileTreePanel
 			}
 		}
+		return m, nil
+
+	case "t":
+		if m.preview.IsSearchMode() || m.filterActive {
+			break
+		}
+		lipgloss.SetHasDarkBackground(!lipgloss.HasDarkBackground())
+		m.preview.RefreshTheme()
 		return m, nil
 
 	case "f":

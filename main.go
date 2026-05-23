@@ -98,6 +98,7 @@ Navigation:
   /                    Filter files (file tree) or search (preview)
   n/N                  Next/previous search match
   i                    Toggle ignored directories
+  t                    Toggle light/dark theme
   ?                    Show help overlay
   q, Ctrl+C            Quit
 

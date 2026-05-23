@@ -628,13 +628,24 @@ func (m *Model) SetSize(width, height int) {
 
 	// Update search input width
 	m.searchInput.Width = width - 10
+	m.rerenderContent()
+}
 
-	// Re-render content if we have any
+func (m *Model) RefreshTheme() {
+	if m.renderer == nil {
+		return
+	}
+
+	if err := m.renderer.RefreshTheme(); err == nil {
+		m.rerenderContent()
+	}
+}
+
+func (m *Model) rerenderContent() {
 	if m.rawContent != "" && m.renderer != nil {
 		rendered, err := m.renderer.Render(m.rawContent)
 		if err == nil {
 			m.renderedContent = rendered
-			// If there's an active search, apply highlighting
 			if m.searchQuery != "" {
 				m.applySearchHighlight()
 			} else {

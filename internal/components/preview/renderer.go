@@ -2,6 +2,7 @@ package preview
 
 import (
 	"github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // Renderer wraps Glamour for markdown rendering
@@ -12,10 +13,7 @@ type Renderer struct {
 
 // NewRenderer creates a new markdown renderer
 func NewRenderer(width int) (*Renderer, error) {
-	r, err := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(width),
-	)
+	r, err := glamour.NewTermRenderer(rendererOptions(width)...)
 	if err != nil {
 		return nil, err
 	}
@@ -31,16 +29,33 @@ func (r *Renderer) Render(content string) (string, error) {
 	return r.renderer.Render(content)
 }
 
+func rendererOptions(width int) []glamour.TermRendererOption {
+	style := "light"
+	if lipgloss.HasDarkBackground() {
+		style = "dark"
+	}
+
+	return []glamour.TermRendererOption{
+		glamour.WithStandardStyle(style),
+		glamour.WithWordWrap(width),
+	}
+}
+
 // SetWidth updates the word wrap width and recreates the renderer
 func (r *Renderer) SetWidth(width int) error {
 	if r.width == width {
 		return nil
 	}
 
-	newRenderer, err := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(width),
-	)
+	return r.reset(width)
+}
+
+func (r *Renderer) RefreshTheme() error {
+	return r.reset(r.width)
+}
+
+func (r *Renderer) reset(width int) error {
+	newRenderer, err := glamour.NewTermRenderer(rendererOptions(width)...)
 	if err != nil {
 		return err
 	}
